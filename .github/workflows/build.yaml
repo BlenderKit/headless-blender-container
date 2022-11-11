@@ -51,6 +51,9 @@ jobs:
       - name: Extract Blender
         run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.3 --strip-components=1
 
+      - name: LS
+        run: ls -a -l
+
       - name: BUILD
         run: podman build -f ./multi-version/Containerfile -t agajdosi/headless-blender
 
@@ -72,6 +75,8 @@ jobs:
         run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.0} -p
       - name: Extract Blender
         run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.0 --strip-components=1
+      - name: LS
+        run: ls -a -l
       - name: BUILD
         run: podman build -f ./3.0/Containerfile -t agajdosi/headless-blender
       - name: login
@@ -91,6 +96,8 @@ jobs:
         run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.1} -p
       - name: Extract Blender
         run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.1 --strip-components=1
+      - name: LS
+        run: ls -a -l
       - name: BUILD
         run: podman build -f ./3.1/Containerfile -t agajdosi/headless-blender
       - name: login
