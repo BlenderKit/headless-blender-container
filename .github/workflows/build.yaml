@@ -15,6 +15,10 @@ jobs:
 
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
+      - name: login
+        env:
+            PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
+        run: podman login docker.io -u agajdosi -p $PASSWORD
 
       - name: Download Blender 2.93
         run: curl https://download.blender.org/release/Blender2.93/blender-2.93.8-linux-x64.tar.xz -o /home/runner/blender.tar.xz
@@ -59,9 +63,6 @@ jobs:
       - name: BUILD
         run: podman build -f ./Containerfile -t agajdosi/headless-blender
 
-      - name: login
-        run: podman login docker.io -u agajdosi -p $AGAJDOSI_DOCKERHUB_SECRET
-
       - name: PUSH
         run: podman push agajdosi/headless-blender:multiimage
 
@@ -84,7 +85,9 @@ jobs:
       - name: BUILD
         run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender
       - name: login
-        run: podman login docker.io -u agajdosi -p $AGAJDOSI_DOCKERHUB_SECRET
+        env:
+          PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
+        run: podman login docker.io -u agajdosi -p $PASSWORD
       - name: PUSH
         run: podman push agajdosi/headless-blender:blender-3.0
 
@@ -94,6 +97,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
+      - name: login
+        env:
+          PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
+        run: podman login docker.io -u agajdosi -p $PASSWORD
       - name: Download Blender 3.1
         run: curl https://download.blender.org/release/Blender3.1/blender-3.1.0-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
@@ -106,7 +113,5 @@ jobs:
         run: pwd
       - name: BUILD
         run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender
-      - name: login
-        run: podman login docker.io -u agajdosi -p $AGAJDOSI_DOCKERHUB_SECRET
       - name: PUSH
         run: podman push agajdosi/headless-blender:blender-3.1
