@@ -8,11 +8,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  MULTI_IMAGE:
+  MULTI_VERSION:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: login
@@ -21,50 +20,48 @@ jobs:
         run: podman login docker.io -u agajdosi -p $PASSWORD
 
       - name: Download Blender 2.93
-        run: curl https://download.blender.org/release/Blender2.93/blender-2.93.8-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+        run: curl https://download.blender.org/release/Blender2.93/blender-2.93.8-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
-        run: mkdir {/home/runner/.local/bin,/home/runner/blender-2.93} -p
-      - name: Extract Blender
-        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-2.93 --strip-components=1
+        run: mkdir blender-2.93 -p
+      - name: Extract
+        run: tar -xf blender.tar.xz -C blender-2.93 --strip-components=1
 
       - name: Download Blender 3.0
-        run: curl https://download.blender.org/release/Blender3.0/blender-3.0.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+        run: curl https://download.blender.org/release/Blender3.0/blender-3.0.0-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
-        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.0} -p
-      - name: Extract Blender
-        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.0 --strip-components=1
+        run: mkdir blender-3.0 -p
+      - name: Extract
+        run: tar -xf blender.tar.xz -C blender-3.0 --strip-components=1
 
       - name: Download Blender 3.1
-        run: curl https://download.blender.org/release/Blender3.1/blender-3.1.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+        run: curl https://download.blender.org/release/Blender3.1/blender-3.1.0-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
-        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.1} -p
-      - name: Extract Blender
-        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.1 --strip-components=1
+        run: mkdir blender-3.1 -p
+      - name: Extract
+        run: tar -xf blender.tar.xz -C blender-3.1 --strip-components=1
 
       - name: Download Blender 3.2
-        run: curl https://download.blender.org/release/Blender3.2/blender-3.2.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+        run: curl https://download.blender.org/release/Blender3.2/blender-3.2.0-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
-        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.2} -p
-      - name: Extract Blender
-        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.2 --strip-components=1
+        run: mkdir blender-3.2 -p
+      - name: Extract
+        run: tar -xf blender.tar.xz -C blender-3.2 --strip-components=1
 
       - name: Download Blender 3.3
-        run: curl https://download.blender.org/release/Blender3.3/blender-3.3.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+        run: curl https://download.blender.org/release/Blender3.3/blender-3.3.0-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
-        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.3} -p
-      - name: Extract Blender
-        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.3 --strip-components=1
+        run: mkdir blender-3.3 -p
+      - name: Extract
+        run: tar -xf blender.tar.xz -C blender-3.3 --strip-components=1
 
       - name: LS
         run: ls -a -l
       - name: PWD
         run: pwd
-
       - name: BUILD
-        run: podman build -f ./Containerfile -t agajdosi/headless-blender
-
+        run: podman build -f ./Containerfile -t agajdosi/headless-blender:multi-version
       - name: PUSH
-        run: podman push agajdosi/headless-blender:multiimage
+        run: podman push agajdosi/headless-blender:multi-version
 
   Blender_3-0:
     runs-on: ubuntu-latest
@@ -72,6 +69,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
+      - name: login
+        env:
+          PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
+        run: podman login docker.io -u agajdosi -p $PASSWORD
       - name: Download Blender 3.0
         run: curl https://download.blender.org/release/Blender3.0/blender-3.0.0-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
@@ -83,11 +84,7 @@ jobs:
       - name: PWD
         run: pwd
       - name: BUILD
-        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender
-      - name: login
-        env:
-          PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
-        run: podman login docker.io -u agajdosi -p $PASSWORD
+        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-3.0
       - name: PUSH
         run: podman push agajdosi/headless-blender:blender-3.0
 
@@ -112,6 +109,6 @@ jobs:
       - name: PWD
         run: pwd
       - name: BUILD
-        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender
+        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-3.1
       - name: PUSH
         run: podman push agajdosi/headless-blender:blender-3.1
