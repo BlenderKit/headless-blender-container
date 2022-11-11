@@ -155,7 +155,7 @@ jobs:
           PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
         run: podman login docker.io -u agajdosi -p $PASSWORD
       - name: Download
-        run: curl https://download.blender.org/release/Blender3.1/blender-3.3.0-linux-x64.tar.xz -o blender.tar.xz
+        run: curl https://download.blender.org/release/Blender3.3/blender-3.3.0-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
         run: mkdir single-version/blender -p
       - name: Extract
