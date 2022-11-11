@@ -1,0 +1,57 @@
+name: build
+
+on:
+  push:
+      branches: [ main ]
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  Container_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Podman
+        run: sudo apt-get -y update && sudo apt-get -y install podman
+
+      - name: Download Blender 2.93
+        run: curl https://download.blender.org/release/Blender2.93/blender-2.93.8-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+      - name: Mkdir
+        run: mkdir {/home/runner/.local/bin,/home/runner/blender-2.93} -p
+      - name: Extract Blender
+        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-2.93 --strip-components=1
+
+      - name: Download Blender 3.0
+        run: curl https://download.blender.org/release/Blender3.0/blender-3.0.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+      - name: Mkdir
+        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.0} -p
+      - name: Extract Blender
+        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.0 --strip-components=1
+
+      - name: Download Blender 3.1
+        run: curl https://download.blender.org/release/Blender3.1/blender-3.1.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+      - name: Mkdir
+        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.1} -p
+      - name: Extract Blender
+        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.1 --strip-components=1
+
+      - name: Download Blender 3.2
+        run: curl https://download.blender.org/release/Blender3.2/blender-3.2.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+      - name: Mkdir
+        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.2} -p
+      - name: Extract Blender
+        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.2 --strip-components=1
+
+      - name: Download Blender 3.3
+        run: curl https://download.blender.org/release/Blender3.3/blender-3.3.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+      - name: Mkdir
+        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.3} -p
+      - name: Extract Blender
+        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.3 --strip-components=1
+
+      - name: BUILD
+        run: podman build -t agajdosi/blender
+
+
