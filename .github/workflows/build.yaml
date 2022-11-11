@@ -55,7 +55,7 @@ jobs:
         run: ls -a -l
 
       - name: BUILD
-        run: podman build -f ./multi-version/Containerfile -t agajdosi/headless-blender
+        run: podman build -f ./Containerfile -t agajdosi/headless-blender
 
       - name: login
         run: podman login docker.io -u agajdosi -p $AGAJDOSI_DOCKERHUB_SECRET
@@ -72,13 +72,13 @@ jobs:
       - name: Download Blender 3.0
         run: curl https://download.blender.org/release/Blender3.0/blender-3.0.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
       - name: Mkdir
-        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.0} -p
+        run: mkdir {/home/runner/.local/bin,/home/runner/single-version/blender} -p
       - name: Extract Blender
-        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.0 --strip-components=1
+        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/single-version/blender --strip-components=1
       - name: LS
         run: ls -a -l
       - name: BUILD
-        run: podman build -f ./3.0/Containerfile -t agajdosi/headless-blender
+        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender
       - name: login
         run: podman login docker.io -u agajdosi -p $AGAJDOSI_DOCKERHUB_SECRET
       - name: PUSH
@@ -93,13 +93,13 @@ jobs:
       - name: Download Blender 3.1
         run: curl https://download.blender.org/release/Blender3.1/blender-3.1.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
       - name: Mkdir
-        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.1} -p
+        run: mkdir {/home/runner/.local/bin,/home/runner/single-version/blender} -p
       - name: Extract Blender
-        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.1 --strip-components=1
+        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/single-version/blender --strip-components=1
       - name: LS
         run: ls -a -l
       - name: BUILD
-        run: podman build -f ./3.1/Containerfile -t agajdosi/headless-blender
+        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender
       - name: login
         run: podman login docker.io -u agajdosi -p $AGAJDOSI_DOCKERHUB_SECRET
       - name: PUSH
