@@ -53,6 +53,8 @@ jobs:
 
       - name: LS
         run: ls -a -l
+      - name: PWD
+        run: pwd
 
       - name: BUILD
         run: podman build -f ./Containerfile -t agajdosi/headless-blender
@@ -77,6 +79,8 @@ jobs:
         run: tar -xf /home/runner/blender.tar.xz -C /home/runner/single-version/blender --strip-components=1
       - name: LS
         run: ls -a -l
+      - name: PWD
+        run: pwd
       - name: BUILD
         run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender
       - name: login
@@ -98,6 +102,8 @@ jobs:
         run: tar -xf /home/runner/blender.tar.xz -C /home/runner/single-version/blender --strip-components=1
       - name: LS
         run: ls -a -l
+      - name: PWD
+        run: pwd
       - name: BUILD
         run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender
       - name: login
