@@ -72,11 +72,11 @@ jobs:
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Download Blender 3.0
-        run: curl https://download.blender.org/release/Blender3.0/blender-3.0.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+        run: curl https://download.blender.org/release/Blender3.0/blender-3.0.0-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
-        run: mkdir {/home/runner/.local/bin,/home/runner/single-version/blender} -p
+        run: mkdir single-version/blender -p
       - name: Extract Blender
-        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/single-version/blender --strip-components=1
+        run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
       - name: LS
         run: ls -a -l
       - name: PWD
@@ -95,11 +95,11 @@ jobs:
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Download Blender 3.1
-        run: curl https://download.blender.org/release/Blender3.1/blender-3.1.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+        run: curl https://download.blender.org/release/Blender3.1/blender-3.1.0-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
-        run: mkdir {/home/runner/.local/bin,/home/runner/single-version/blender} -p
+        run: mkdir single-version/blender -p
       - name: Extract Blender
-        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/single-version/blender --strip-components=1
+        run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
       - name: LS
         run: ls -a -l
       - name: PWD
