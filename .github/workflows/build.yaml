@@ -52,6 +52,14 @@ jobs:
         run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.3 --strip-components=1
 
       - name: BUILD
-        run: podman build -t agajdosi/blender
+        run: podman build -t agajdosi/headless-blender
+
+      - name: login
+        run: podman login docker.io -u agajdosi -p $AGAJDOSI_DOCKERHUB_SECRET
+
+      - name: PUSH
+        run: podman push agajdosi/headless-blender
+
+
 
 
