@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  Container_build:
+  MULTI_IMAGE:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -52,14 +52,48 @@ jobs:
         run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.3 --strip-components=1
 
       - name: BUILD
-        run: podman build -t agajdosi/headless-blender
+        run: podman build -f ./multi-version/Containerfile -t agajdosi/headless-blender
 
       - name: login
         run: podman login docker.io -u agajdosi -p $AGAJDOSI_DOCKERHUB_SECRET
 
       - name: PUSH
-        run: podman push agajdosi/headless-blender
+        run: podman push agajdosi/headless-blender:multiimage
 
+  Blender_3-0:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Podman
+        run: sudo apt-get -y update && sudo apt-get -y install podman
+      - name: Download Blender 3.0
+        run: curl https://download.blender.org/release/Blender3.0/blender-3.0.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+      - name: Mkdir
+        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.0} -p
+      - name: Extract Blender
+        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.0 --strip-components=1
+      - name: BUILD
+        run: podman build -f ./3.0/Containerfile -t agajdosi/headless-blender
+      - name: login
+        run: podman login docker.io -u agajdosi -p $AGAJDOSI_DOCKERHUB_SECRET
+      - name: PUSH
+        run: podman push agajdosi/headless-blender:blender-3.0
 
-
-
+  Blender_3-1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Podman
+        run: sudo apt-get -y update && sudo apt-get -y install podman
+      - name: Download Blender 3.1
+        run: curl https://download.blender.org/release/Blender3.1/blender-3.1.0-linux-x64.tar.xz -o /home/runner/blender.tar.xz
+      - name: Mkdir
+        run: mkdir {/home/runner/.local/bin,/home/runner/blender-3.1} -p
+      - name: Extract Blender
+        run: tar -xf /home/runner/blender.tar.xz -C /home/runner/blender-3.1 --strip-components=1
+      - name: BUILD
+        run: podman build -f ./3.1/Containerfile -t agajdosi/headless-blender
+      - name: login
+        run: podman login docker.io -u agajdosi -p $AGAJDOSI_DOCKERHUB_SECRET
+      - name: PUSH
+        run: podman push agajdosi/headless-blender:blender-3.1

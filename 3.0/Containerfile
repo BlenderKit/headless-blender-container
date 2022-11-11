@@ -1,0 +1,8 @@
+FROM docker.io/accetto/ubuntu-vnc-xfce-opengl-g3
+USER root
+
+RUN apt-get update && apt-get install -y git unzip ca-certificates
+
+ADD blender-3.0 blender-3.0
+
+ENTRYPOINT [ "/usr/bin/tini", "--", "/dockerstartup/startup.sh" ]
