@@ -31,35 +31,35 @@ jobs:
       - name: Mkdir
         run: mkdir 3.0 -p
       - name: Extract
-        run: tar -xf blender.tar.xz -C blender-3.0 --strip-components=1
+        run: tar -xf blender.tar.xz -C 3.0 --strip-components=1
 
       - name: Download Blender 3.1
         run: curl https://download.blender.org/release/Blender3.1/blender-3.1.2-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
-        run: mkdir blender-3.1 -p
+        run: mkdir 3.1 -p
       - name: Extract
-        run: tar -xf blender.tar.xz -C blender-3.1 --strip-components=1
+        run: tar -xf blender.tar.xz -C 3.1 --strip-components=1
 
       - name: Download Blender 3.2
         run: curl https://download.blender.org/release/Blender3.2/blender-3.2.2-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
-        run: mkdir blender-3.2 -p
+        run: mkdir 3.2 -p
       - name: Extract
-        run: tar -xf blender.tar.xz -C blender-3.2 --strip-components=1
+        run: tar -xf blender.tar.xz -C 3.2 --strip-components=1
 
       - name: Download Blender 3.3
         run: curl https://download.blender.org/release/Blender3.3/blender-3.3.2-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
-        run: mkdir blender-3.3 -p
+        run: mkdir 3.3 -p
       - name: Extract
-        run: tar -xf blender.tar.xz -C blender-3.3 --strip-components=1
+        run: tar -xf blender.tar.xz -C 3.3 --strip-components=1
 
       - name: Download Blender 3.4
         run: curl https://download.blender.org/release/Blender3.4/blender-3.4.1-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
-        run: mkdir blender-3.4 -p
+        run: mkdir 3.4 -p
       - name: Extract
-        run: tar -xf blender.tar.xz -C blender-3.4 --strip-components=1
+        run: tar -xf blender.tar.xz -C 3.4 --strip-components=1
 
       - name: BUILD
         run: podman build -f ./Containerfile -t agajdosi/headless-blender:multi-version
@@ -86,7 +86,6 @@ jobs:
         run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-2.93
       - name: Push
         run: podman push agajdosi/headless-blender:blender-2.93
-
 
   Blender_3-0:
     runs-on: ubuntu-latest
