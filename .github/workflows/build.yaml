@@ -48,7 +48,7 @@ jobs:
         run: tar -xf blender.tar.xz -C 3.2 --strip-components=1
 
       - name: Download Blender 3.3
-        run: curl https://download.blender.org/release/Blender3.3/blender-3.3.2-linux-x64.tar.xz -o blender.tar.xz
+        run: curl https://download.blender.org/release/Blender3.3/blender-3.3.6-linux-x64.tar.xz -o blender.tar.xz
       - name: Mkdir
         run: mkdir 3.3 -p
       - name: Extract
@@ -60,6 +60,13 @@ jobs:
         run: mkdir 3.4 -p
       - name: Extract
         run: tar -xf blender.tar.xz -C 3.4 --strip-components=1
+
+      - name: Download Blender 3.5
+        run: curl https://download.blender.org/release/Blender3.5/blender-3.5.1-linux-x64.tar.xz -o blender.tar.xz
+      - name: Mkdir
+        run: mkdir 3.5 -p
+      - name: Extract
+        run: tar -xf blender.tar.xz -C 3.5 --strip-components=1
 
       - name: BUILD
         run: podman build -f ./Containerfile -t agajdosi/headless-blender:multi-version
@@ -191,3 +198,24 @@ jobs:
         run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-3.4
       - name: push
         run: podman push agajdosi/headless-blender:blender-3.4
+
+  Blender_3-5:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Podman
+        run: sudo apt-get -y update && sudo apt-get -y install podman
+      - name: Login
+        env:
+          PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
+        run: podman login docker.io -u agajdosi -p $PASSWORD
+      - name: Download
+        run: curl https://download.blender.org/release/Blender3.5/blender-3.5.1-linux-x64.tar.xz -o blender.tar.xz
+      - name: Mkdir
+        run: mkdir single-version/blender -p
+      - name: Extract
+        run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
+      - name: build
+        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-3.5
+      - name: push
+        run: podman push agajdosi/headless-blender:blender-3.5
