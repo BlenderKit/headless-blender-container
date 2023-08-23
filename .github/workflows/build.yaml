@@ -38,7 +38,7 @@ jobs:
         run: tar -xf blender.tar.xz -C 2.93 --strip-components=1
 
       - name: Download Blender 3.0
-        run: curl $BLENDER_3.0 -o blender.tar.xz
+        run: curl $BLENDER_3_0 -o blender.tar.xz
       - name: Mkdir
         run: mkdir 3.0 -p
       - name: Extract
@@ -94,9 +94,9 @@ jobs:
         run: tar -xf blender.tar.xz -C 4.0 --strip-components=1
 
       - name: BUILD
-        run: podman build -f ./Containerfile -t agajdosi/headless-blender:multi-version
+        run: podman build -f ./Containerfile -t blenderkit/headless-blender:multi-version
       - name: PUSH
-        run: podman push agajdosi/headless-blender:multi-version
+        run: podman push blenderkit/headless-blender:multi-version
 
   Blender_2-93:
     runs-on: ubuntu-latest
@@ -115,9 +115,9 @@ jobs:
       - name: Extract
         run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
       - name: Build
-        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-2.93
+        run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-2.93
       - name: Push
-        run: podman push agajdosi/headless-blender:blender-2.93
+        run: podman push blenderkit/headless-blender:blender-2.93
 
   Blender_3-0:
     runs-on: ubuntu-latest
@@ -136,9 +136,9 @@ jobs:
       - name: Extract Blender
         run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
       - name: Build
-        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-3.0
+        run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-3.0
       - name: Push
-        run: podman push agajdosi/headless-blender:blender-3.0
+        run: podman push blenderkit/headless-blender:blender-3.0
 
   Blender_3-1:
     runs-on: ubuntu-latest
@@ -157,9 +157,9 @@ jobs:
       - name: Extract
         run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
       - name: Build
-        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-3.1
+        run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-3.1
       - name: Push
-        run: podman push agajdosi/headless-blender:blender-3.1
+        run: podman push blenderkit/headless-blender:blender-3.1
 
   Blender_3-2:
     runs-on: ubuntu-latest
@@ -178,9 +178,9 @@ jobs:
       - name: Extract
         run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
       - name: Build
-        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-3.2
+        run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-3.2
       - name: Push
-        run: podman push agajdosi/headless-blender:blender-3.2
+        run: podman push blenderkit/headless-blender:blender-3.2
 
   Blender_3-3:
     runs-on: ubuntu-latest
@@ -199,9 +199,9 @@ jobs:
       - name: Extract
         run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
       - name: build
-        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-3.3
+        run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-3.3
       - name: push
-        run: podman push agajdosi/headless-blender:blender-3.3
+        run: podman push blenderkit/headless-blender:blender-3.3
 
   Blender_3-4:
     runs-on: ubuntu-latest
@@ -220,9 +220,9 @@ jobs:
       - name: Extract
         run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
       - name: build
-        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-3.4
+        run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-3.4
       - name: push
-        run: podman push agajdosi/headless-blender:blender-3.4
+        run: podman push blenderkit/headless-blender:blender-3.4
 
   Blender_3-5:
     runs-on: ubuntu-latest
@@ -241,9 +241,9 @@ jobs:
       - name: Extract
         run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
       - name: build
-        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-3.5
+        run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-3.5
       - name: push
-        run: podman push agajdosi/headless-blender:blender-3.5
+        run: podman push blenderkit/headless-blender:blender-3.5
 
   Blender_3-6:
     runs-on: ubuntu-latest
@@ -262,9 +262,9 @@ jobs:
       - name: Extract
         run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
       - name: build
-        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-3.6
+        run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-3.6
       - name: push
-        run: podman push agajdosi/headless-blender:blender-3.6
+        run: podman push blenderkit/headless-blender:blender-3.6
 
   Blender_4-0:
     runs-on: ubuntu-latest
@@ -283,6 +283,6 @@ jobs:
       - name: Extract
         run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
       - name: build
-        run: podman build -f ./single-version/Containerfile -t agajdosi/headless-blender:blender-4.0
+        run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-4.0
       - name: push
-        run: podman push agajdosi/headless-blender:blender-4.0
+        run: podman push blenderkit/headless-blender:blender-4.0
