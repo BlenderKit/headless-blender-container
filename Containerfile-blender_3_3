@@ -1,0 +1,4 @@
+FROM blender_3_2
+USER root
+
+ADD 3.3 /home/headless/blenders/3.3
