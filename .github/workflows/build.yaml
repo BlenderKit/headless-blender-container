@@ -43,7 +43,7 @@ jobs:
       - name: Delete Blender
         run: rm -rf 2.93
       - name: Delete previous docker image
-        run: docker rmi docker.io/accetto/ubuntu-vnc-xfce-opengl-g3
+        run: docker rmi daccetto/ubuntu-vnc-xfce-opengl-g3
 
       - name: Download Blender 3.0
         run: curl $BLENDER_3_0 -o blender.tar.xz
