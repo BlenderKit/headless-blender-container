@@ -10,5 +10,7 @@ ADD 3.2 /home/headless/blenders/3.2
 ADD 3.3 /home/headless/blenders/3.3
 ADD 3.4 /home/headless/blenders/3.4
 ADD 3.5 /home/headless/blenders/3.5
+ADD 3.6 /home/headless/blenders/3.6
+ADD 4.0 /home/headless/blenders/4.0
 
 ENTRYPOINT [ "/usr/bin/tini", "--", "/dockerstartup/startup.sh" ]
