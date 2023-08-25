@@ -303,24 +303,3 @@ jobs:
         run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-3.6
       - name: push
         run: podman push blenderkit/headless-blender:blender-3.6
-
-  Blender_4-0:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install Podman
-        run: sudo apt-get -y update && sudo apt-get -y install podman
-      - name: Login
-        env:
-          PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
-        run: podman login docker.io -u agajdosi -p $PASSWORD
-      - name: Download
-        run: curl $BLENDER_4_0 -o blender.tar.xz
-      - name: Mkdir
-        run: mkdir single-version/blender -p
-      - name: Extract
-        run: tar -xf blender.tar.xz -C single-version/blender --strip-components=1
-      - name: build
-        run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-4.0
-      - name: push
-        run: podman push blenderkit/headless-blender:blender-4.0
