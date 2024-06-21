@@ -31,6 +31,19 @@ jobs:
             PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
         run: podman login docker.io -u agajdosi -p $PASSWORD
 
+      - name: Download Blender 2.93
+        run: curl $BLENDER_2_93 -o blender.tar.xz
+      - name: Mkdir
+        run: mkdir 2.93 -p
+      - name: Extract
+        run: tar -xf blender.tar.xz -C 2.93 --strip-components=1
+      - name: Delete tar file
+        run: rm blender.tar.xz
+      - name: BUILD
+        run: podman build -f ./Containerfile-blender_2_93 -t blender_2_93:latest
+      - name: Delete Blender
+        run: rm -rf 2.93
+
       - name: Download Blender 3.0
         run: curl $BLENDER_3_0 -o blender.tar.xz
       - name: Mkdir
