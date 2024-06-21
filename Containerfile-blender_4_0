@@ -1,0 +1,4 @@
+FROM blender_3_6
+USER root
+
+ADD 4.0 /home/headless/blenders/4.0
