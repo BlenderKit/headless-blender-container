@@ -23,7 +23,7 @@ jobs:
   MULTI_VERSION:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
@@ -159,7 +159,7 @@ jobs:
   Blender_2-93:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
@@ -180,7 +180,7 @@ jobs:
   Blender_3-0:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
@@ -201,7 +201,7 @@ jobs:
   Blender_3-1:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
@@ -222,7 +222,7 @@ jobs:
   Blender_3-2:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
@@ -243,7 +243,7 @@ jobs:
   Blender_3-3:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
@@ -264,7 +264,7 @@ jobs:
   Blender_3-4:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
@@ -285,7 +285,7 @@ jobs:
   Blender_3-5:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
@@ -306,7 +306,7 @@ jobs:
   Blender_3-6:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
@@ -327,7 +327,7 @@ jobs:
   Blender_4-0:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
@@ -348,7 +348,7 @@ jobs:
   Blender_4-1:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Podman
         run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
