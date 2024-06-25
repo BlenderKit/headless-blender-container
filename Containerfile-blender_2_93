@@ -1,0 +1,8 @@
+FROM docker.io/accetto/ubuntu-vnc-xfce-opengl-g3
+USER root
+
+RUN apt-get update && apt-get install -y git unzip ca-certificates python3-pip
+
+ADD 2.93 /home/headless/blenders/2.93
+
+ENTRYPOINT [ "/usr/bin/tini", "--", "/dockerstartup/startup.sh" ]
