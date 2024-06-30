@@ -1,3 +1,0 @@
-[submodule "get_blender_release"]
-	path = get_blender_release
-	url = https://github.com/BlenderKit/get-blender-release
