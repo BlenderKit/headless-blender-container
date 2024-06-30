@@ -72,8 +72,11 @@ def build_container(url, version: tuple):
     
     print("file is:", __file__)
     cf_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
-    subprocess.run(['podman', 'build', '-f', cf_path, '-t', f'blenderkit/headless-blender:blender-{version}'], check=True)
-    subprocess.run(['podman', 'push', 'blenderkit/headless-blender:blender-{version}'], check=True)
+    out = subprocess.run(['podman', 'build', '-f', cf_path, '-t', f'blenderkit/headless-blender:blender-{version}'], cwd=build_dir, check=True)
+    print(out)
+    out = out = subprocess.run(['podman', 'push', 'blenderkit/headless-blender:blender-{version}'], check=True)
+    print(out)
+    print("--- Done ---")
 
 if __name__ == '__main__':
     build_prereleases()
