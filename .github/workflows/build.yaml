@@ -383,4 +383,4 @@ jobs:
           PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
         run: podman login docker.io -u agajdosi -p $PASSWORD
       - name: Build.py
-        run: python3 ./build.py
+        run: python3 build.py

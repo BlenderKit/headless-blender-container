@@ -67,15 +67,18 @@ def build_container(url, version: tuple):
 
     tar_path = os.path.join(build_dir, "blender.tar.xz")
     download_file(url, tar_path)
-    
     extract_tar(tar_path, build_dir)
-    
-    print("file is:", __file__)
+
     cf_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
-    out = subprocess.run(['podman', 'build', '-f', cf_path, '-t', f'blenderkit/headless-blender:blender-{version}'], cwd=build_dir, check=True)
-    print(out)
-    out = out = subprocess.run(['podman', 'push', 'blenderkit/headless-blender:blender-{version}'], check=True)
-    print(out)
+    out = subprocess.run(['podman', 'build', '-f', cf_path, '-t', f'blenderkit/headless-blender:blender-{version}'], cwd=build_dir)
+    if out.returncode!= 0:
+        print("Error:", out)
+        raise Exception("Failed to build container")
+
+    out = out = subprocess.run(['podman', 'push', 'blenderkit/headless-blender:blender-{version}'])
+    if out.returncode!= 0:
+        print("Error:", out)
+        raise Exception("Failed to push container")
     print("--- Done ---")
 
 if __name__ == '__main__':
