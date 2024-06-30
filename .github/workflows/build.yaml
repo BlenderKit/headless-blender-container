@@ -365,3 +365,19 @@ jobs:
         run: podman build -f ./single-version/Containerfile -t blenderkit/headless-blender:blender-4.1
       - name: push
         run: podman push blenderkit/headless-blender:blender-4.1
+
+  Blender-prereleases:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' 
+      - name: Install Podman
+        run: sudo apt-get -y update && sudo apt-get -y install podman
+      - name: Login
+        env:
+          PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
+        run: podman login docker.io -u agajdosi -p $PASSWORD
+      - name: Build.py
+        run: python3 ./build.py

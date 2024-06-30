@@ -22,11 +22,11 @@ def download_file(url, dst):
         with open(dst, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
-    print(" ...done ✅")
+    print("✅ download complete")
 
 
 def extract_tar(tar_path, target_dir):
-    dst = os.path.join(dst, "blender")
+    dst = os.path.join(target_dir, "blender")
     if os.path.exists(dst):
         print(f"- skipping extraction, {dst} exists")
         return
@@ -39,19 +39,28 @@ def extract_tar(tar_path, target_dir):
         if item == "blender.tar.xz":
             continue
         src = os.path.join(target_dir, item)
-        print(f"moving {src} -> {dst}")
+        print(f"- moving {src} -> {dst}")
         shutil.move(src, dst)
-    print(" ...done ✅")
+    print("✅ extraction complete")
 
 def generate_dockerfile(version):
+    """Generate """
+    x = version[0]
+    y = version[1]
     dockerfile = f"""
-    FROM fedora:34"""
+FROM docker.io/accetto/ubuntu-vnc-xfce-opengl-g3
+USER root
+RUN apt-get update && apt-get install -y git unzip ca-certificates python3-pip
+ADD {x}.{y}/blender /home/headless/blenders/{x}.{y}
+ENTRYPOINT [ "/usr/bin/tini", "--", "/dockerstartup/startup.sh" ]
+"""
 
 
 def build_container(url, version: tuple):
     if type(version) != tuple:
         raise ValueError("Version must be a tuple (major, minor, patch)")
     print(f"--- Building {version} ---")
+
     version = f"{version[0]}.{version[1]}"
     build_dir = os.path.join("build", version)
     os.makedirs(build_dir, exist_ok=True)
@@ -59,12 +68,12 @@ def build_container(url, version: tuple):
     tar_path = os.path.join(build_dir, "blender.tar.xz")
     download_file(url, tar_path)
     
-    dst = os.path.join(build_dir, "blender")
-    if not os.path.exists(dst):
-        extract_tar(tar_path, build_dir, dst)
-
-    #subprocess.run(['podman', 'build', '-f', './single-version/Containerfile', '-t', 'blenderkit/headless-blender:blender-4.0'], check=True)
-    #subprocess.run(['podman', 'push', 'blenderkit/headless-blender:blender-4.0'], check=True)
+    extract_tar(tar_path, build_dir)
+    
+    print("file is:", __file__)
+    cf_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
+    subprocess.run(['podman', 'build', '-f', cf_path, '-t', f'blenderkit/headless-blender:blender-{version}'], check=True)
+    subprocess.run(['podman', 'push', 'blenderkit/headless-blender:blender-{version}'], check=True)
 
 if __name__ == '__main__':
     build_prereleases()
