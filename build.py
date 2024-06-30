@@ -70,9 +70,9 @@ def build_container(url, version: tuple):
     extract_tar(tar_path, build_dir)
 
     cf_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
-    subprocess.run(['podman', 'build', '-f', cf_path, '-t', f'blenderkit/headless-blender:blender-{version}'], cwd=build_dir, capture_output=True, check=True)
+    subprocess.run(['podman', 'build', '-f', cf_path, '-t', f'blenderkit/headless-blender:blender-{version}'], cwd=build_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
-    subprocess.run(['podman', 'push', 'blenderkit/headless-blender:blender-{version}'], capture_output=True, check=True)
+    subprocess.run(['podman', 'push', 'blenderkit/headless-blender:blender-{version}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
     print("--- Done ---")
 
 if __name__ == '__main__':
