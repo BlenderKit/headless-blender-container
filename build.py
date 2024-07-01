@@ -7,11 +7,10 @@ import shutil
 import get_blender_release as gbr
 
 
-def build_prereleases():
-    prereleases = gbr.get_blender_prereleases(os="linux", arch="x64")
-    for prerelease in reversed(prereleases):
-        build_container(prerelease.url, prerelease.version)
-
+def build_containers():
+    releases = gbr.get_stable_and_prereleases(os="linux", arch="x64", min_ver=(2, 93))
+    for release in reversed(releases):
+        build_container(release.url, release.version)
 
 def download_file(url, dst):
     if os.path.exists(dst):
@@ -70,7 +69,7 @@ def build_container(url, version: tuple):
     """Build Single version Blender container."""
     if type(version) != tuple:
         raise ValueError("Version must be a tuple (major, minor, patch)")
-    print(f"--- Building {version} ---")
+    print(f"=== Building {version} ===")
 
     version = f"{version[0]}.{version[1]}"
     build_dir = os.path.join(os.path.dirname(__file__), "build", version)
@@ -79,8 +78,6 @@ def build_container(url, version: tuple):
     tar_path = os.path.join(build_dir, "blender.tar.xz")
     download_file(url, tar_path)
     extract_tar(tar_path, build_dir)
-    #copy_containerfile(build_dir)
-
 
     containerfile_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
     pb = subprocess.run(['podman', 'build', '-f', containerfile_path, '-t', f'blenderkit/headless-blender:blender-{version}', '.'], cwd=build_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -100,5 +97,4 @@ def build_container(url, version: tuple):
     print("--- Done ---")
 
 if __name__ == '__main__':
-    build_prereleases()
-
+    build_containers()

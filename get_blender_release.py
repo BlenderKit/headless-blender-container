@@ -27,22 +27,20 @@ def get_soup(url: str):
     return BeautifulSoup(response.text, "html.parser")
 
 
-def get_blender_prereleases(os="linux", arch="x64"):
-    """Get a list of Blender prereleases for a given os and arch. If something went wrong, return empty list.
+def get_blender_dailys(os="linux", arch="x64"):
+    """Get a list of Blender daily prereleases for a given os and arch. If something went wrong, return empty list.
     Blender currently releases for these os and arch:
-    windows - x64
-    windows - arm64
-    linux - x64
-    macos - x64
-    macos - arm64
+    
+    - os = windows, linux, macos
+    - arch = x64, arm64
     """
     os = os.lower()
-    if os not in ["windows", "linux", "macos", "darwin"]:
+    if os not in ["windows", "linux", "macos"]:
         print(f"Unsupported OS: {os}")
         return None
     
     arch = arch.lower()
-    if arch not in ["x64", "arm64", "apple silicon", "intel"]:
+    if arch not in ["x64", "arm64"]:
         print(f"Unsupported arch: {arch}")
         return None
     
@@ -182,6 +180,11 @@ def merge_prefer_stable(releases: list[Release], dailys=list[Release]):
             releases.append(daily)
     return releases
 
+def get_stable_and_prereleases(os: str="linux", arch: str="amd64", min_ver=(2, 93)):
+    releases = get_blender_releases(os, arch, min_ver)
+    dailys = get_blender_dailys(os, arch, min_ver)
+    return merge_prefer_stable(releases, dailys)
+
 def parse_version(verstring: str) -> tuple[int]:
     """Parse a version string into a tuple of integers."""
     verstring = verstring.split(" ")[1]
@@ -196,7 +199,7 @@ if __name__ == "__main__":
         print(release)
 
     print("--- prereleases ---")
-    prereleases = get_blender_prereleases("linux", "x64")
+    prereleases = get_blender_dailys("linux", "x64")
     prereleases.append(Release((3, 6, 15), "alpha", "", "", "x64", "linux", "https://download.blender.org/release/Blender2.93/blender-2.93.1-linux-x64.tar.xz"))
     for prerelease in prereleases:
         print(prerelease)
