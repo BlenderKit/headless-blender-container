@@ -67,8 +67,8 @@ def get_blender_prereleases(os="linux", arch="x64"):
         verstring = release.find("a", {"class": "b-version"}).text
         version = parse_version(verstring)
 
-        stage = release.find("a", {"class": "b-variant"}).text
-        if stage.lower() == "stable":
+        stage = release.find("a", {"class": "b-variant"}).text.lower()
+        if stage == "stable":
             continue # not interested in stable versions
 
         reference = release.find("a", {"class": "b-reference"}).text
@@ -167,17 +167,41 @@ def parse_patch_releases(os: str, arch: str, url: str) -> Release:
     return release 
 
 
+def merge_prefer_stable(releases: list[Release], dailys=list[Release]):
+    """Prefer stable releases over daily prereleases releases.
+    If stable minor version is available, do not append daily release.
+    If no stable minor release is available, then append the daily release.
+    """
+    for daily in dailys:
+        stable_available = False
+        for release in releases:
+            if release.version[:2] == daily.version[:2]:
+                stable_available = True
+                break
+        if not stable_available:
+            releases.append(daily)
+    return releases
+
 def parse_version(verstring: str) -> tuple[int]:
     """Parse a version string into a tuple of integers."""
     verstring = verstring.split(" ")[1]
     x, y, z = verstring.split(".")
     return (int(x), int(y), int(z))
 
+
 if __name__ == "__main__":
+    print("--- releases ---")
     releases = get_blender_releases("linux", "x64")
     for release in releases:
         print(release)
 
+    print("--- prereleases ---")
     prereleases = get_blender_prereleases("linux", "x64")
+    prereleases.append(Release((3, 6, 15), "alpha", "", "", "x64", "linux", "https://download.blender.org/release/Blender2.93/blender-2.93.1-linux-x64.tar.xz"))
     for prerelease in prereleases:
         print(prerelease)
+
+    print("--- merged ---")
+    mixes = merge_prefer_stable(releases, prereleases)
+    for mix in mixes:
+        print(mix)
