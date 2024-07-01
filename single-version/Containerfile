@@ -4,5 +4,6 @@ USER root
 RUN apt-get update && apt-get install -y git unzip ca-certificates
 
 ADD blender blender
+LABEL author=agajdosi
 
 ENTRYPOINT [ "/usr/bin/tini", "--", "/dockerstartup/startup.sh" ]
