@@ -100,9 +100,10 @@ def build_container(url: str, version: tuple, stage: str):
     if pb.returncode!= 0:
         raise RuntimeError("Build failed")
     print("-> BUILD DONE")
-    os.remove(build_dir)
+    
+    shutil.rmtree(build_dir)
 
-    pp = subprocess.run(['podman', 'push', f'blenderkit/headless-blender:blender-{version}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    pp = subprocess.run(['podman', 'push', f'blenderkit/headless-blender:blender-{xy}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pp.returncode )
     print( 'stdout:', pp.stdout.decode() )
     print( 'stderr:', pp.stderr.decode() )
