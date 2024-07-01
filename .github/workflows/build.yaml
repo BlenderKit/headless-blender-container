@@ -167,6 +167,8 @@ jobs:
 
   Blender-releases:
     runs-on: ubuntu-latest
+    container:
+      image: quay.io/podman/stable:latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -175,8 +177,8 @@ jobs:
           cache: 'pip'
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Install Podman
-        run: sudo apt-get -y update && sudo apt-get -y install podman
+#      - name: Install Podman
+#        run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login
         env:
           PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
