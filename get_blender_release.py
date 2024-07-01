@@ -180,10 +180,12 @@ def merge_prefer_stable(releases: list[Release], dailys=list[Release]):
             releases.append(daily)
     return releases
 
+
 def get_stable_and_prereleases(os: str="linux", arch: str="amd64", min_ver=(2, 93)):
     releases = get_blender_releases(os, arch, min_ver)
     dailys = get_blender_dailys(os, arch)
     return merge_prefer_stable(releases, dailys)
+
 
 def parse_version(verstring: str) -> tuple[int]:
     """Parse a version string into a tuple of integers."""
@@ -200,7 +202,6 @@ if __name__ == "__main__":
 
     print("--- prereleases ---")
     prereleases = get_blender_dailys("linux", "x64")
-    prereleases.append(Release((3, 6, 15), "alpha", "", "", "x64", "linux", "https://download.blender.org/release/Blender2.93/blender-2.93.1-linux-x64.tar.xz"))
     for prerelease in prereleases:
         print(prerelease)
 

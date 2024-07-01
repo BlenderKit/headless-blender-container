@@ -10,7 +10,7 @@ import get_blender_release as gbr
 def build_containers():
     releases = gbr.get_stable_and_prereleases(os="linux", arch="x64", min_ver=(2, 93))
     for release in reversed(releases):
-        build_container(release.url, release.version)
+        build_container(release.url, release.version, release.stage)
 
 def download_file(url, dst):
     if os.path.exists(dst):
@@ -65,14 +65,15 @@ def copy_containerfile(build_dir):
     shutil.copyfile(src, dst)
 
 
-def build_container(url, version: tuple):
+def build_container(url: str, version: tuple, stage: str):
     """Build Single version Blender container."""
     if type(version) != tuple:
         raise ValueError("Version must be a tuple (major, minor, patch)")
     print(f"=== Building {version} ===")
 
-    version = f"{version[0]}.{version[1]}"
-    build_dir = os.path.join(os.path.dirname(__file__), "build", version)
+    xy = f"{version[0]}.{version[1]}"
+    xyz = f"{version[0]}.{version[1]}.{version[2]}"
+    build_dir = os.path.join(os.path.dirname(__file__), "build", xy)
     os.makedirs(build_dir, exist_ok=True)
 
     tar_path = os.path.join(build_dir, "blender.tar.xz")
@@ -80,12 +81,26 @@ def build_container(url, version: tuple):
     extract_tar(tar_path, build_dir)
 
     containerfile_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
-    pb = subprocess.run(['podman', 'build', '-f', containerfile_path, '-t', f'blenderkit/headless-blender:blender-{version}', '.'], cwd=build_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    pb = subprocess.run(
+        [
+            'podman', 'build',
+            '-f', containerfile_path,
+            '-t', f'blenderkit/headless-blender:blender-{xy}',
+            '--label', f'blender_version={xyz}',
+            '--label', f'stage={stage}',
+            '.'
+        ],
+        cwd=build_dir,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        )
     print( 'exit status:', pb.returncode )
     print( 'stdout:', pb.stdout.decode() )
     print( 'stderr:', pb.stderr.decode() )
     if pb.returncode!= 0:
         raise RuntimeError("Build failed")
+    print("-> BUILD DONE")
+    os.remove(build_dir)
 
     pp = subprocess.run(['podman', 'push', f'blenderkit/headless-blender:blender-{version}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pp.returncode )
@@ -93,7 +108,7 @@ def build_container(url, version: tuple):
     print( 'stderr:', pp.stderr.decode() )
     if pp.returncode!= 0:
         raise RuntimeError("Push failed")
-    
+    print("-> PUSH DONE")
     print("--- Done ---")
 
 if __name__ == '__main__':
