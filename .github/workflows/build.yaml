@@ -170,13 +170,13 @@ jobs:
     container:
       image: quay.io/podman/stable:latest
     steps:
+      - name: Install system dependencies
+        run: apt-get update && apt-get install -y lsb-release
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           cache: 'pip'
-      - name: Install system dependencies
-        run: apt-get update && apt-get install -y lsb-release
       - name: Install dependencies
         run: pip install -r requirements.txt
 #      - name: Install Podman
