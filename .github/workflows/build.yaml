@@ -130,6 +130,10 @@ jobs:
         run: tar -xf blender.tar.xz -C 3.6 --strip-components=1
       - name: Delete tar file
         run: rm blender.tar.xz
+      - name: BUILD
+        run: podman build -f ./Containerfile-blender_3_6 -t blender_3_6:latest
+      - name: Delete Blender
+        run: rm -rf 3.6
 
       - name: Download Blender 4.0
         run: curl $BLENDER_4_0 -o blender.tar.xz
@@ -139,6 +143,10 @@ jobs:
         run: tar -xf blender.tar.xz -C 4.0 --strip-components=1
       - name: Delete tar file
         run: rm blender.tar.xz
+      - name: BUILD
+        run: podman build -f ./Containerfile-blender_4_0 -t blender_4_0:latest
+      - name: Delete Blender
+        run: rm -rf 4.0
 
       - name: Download Blender 4.1
         run: curl $BLENDER_4_1 -o blender.tar.xz
@@ -150,9 +158,10 @@ jobs:
         run: rm blender.tar.xz
 
       - name: FINAL BUILD
-        run: podman build -f ./Containerfile-blender_3_6 -t blenderkit/headless-blender:multi-version
+        run: podman build -f ./Containerfile-blender_4_1 -t blenderkit/headless-blender:multi-version
       - name: Delete Blender
-        run: rm -rf 3.6
+        run: rm -rf 4.1
+
       - name: PUSH
         run: podman push blenderkit/headless-blender:multi-version
 
