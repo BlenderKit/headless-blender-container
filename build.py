@@ -12,6 +12,7 @@ def build_prereleases():
     for prerelease in reversed(prereleases):
         build_container(prerelease.url, prerelease.version)
 
+
 def download_file(url, dst):
     if os.path.exists(dst):
         print(f"- skipping download, {dst} exists")
@@ -44,6 +45,7 @@ def extract_tar(tar_path, target_dir):
         shutil.move(src, dst)
     print("✅ extraction complete")
 
+
 def generate_dockerfile(version):
     """Generate """
     x = version[0]
@@ -56,13 +58,16 @@ ADD {x}.{y}/blender /home/headless/blenders/{x}.{y}
 ENTRYPOINT [ "/usr/bin/tini", "--", "/dockerstartup/startup.sh" ]
 """
 
+
 def copy_containerfile(build_dir):
     src = os.path.join(os.path.dirname(__file__), "single-version", "Containerfile")
     dst = os.path.join(build_dir, "Containerfile")
     print(f"- copying {src} -> {dst}")
     shutil.copyfile(src, dst)
 
+
 def build_container(url, version: tuple):
+    """Build Single version Blender container."""
     if type(version) != tuple:
         raise ValueError("Version must be a tuple (major, minor, patch)")
     print(f"--- Building {version} ---")
@@ -78,7 +83,6 @@ def build_container(url, version: tuple):
 
 
     containerfile_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
-    print(f"build_dir: {build_dir}")
     pb = subprocess.run(['podman', 'build', '-f', containerfile_path, '-t', f'blenderkit/headless-blender:blender-{version}', '.'], cwd=build_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pb.returncode )
     print( 'stdout:', pb.stdout.decode() )

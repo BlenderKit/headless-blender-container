@@ -2,6 +2,8 @@
 
 import requests
 from bs4 import BeautifulSoup
+import re
+import urllib.parse
 
 class Release:
     def __init__(self, version, stage, reference, date, arch, os, url):
@@ -15,12 +17,12 @@ class Release:
     def __str__(self):
         return f"{self.version} {self.stage} {self.reference} {self.date} {self.arch} {self.os} {self.url}"
 
-def get_blender_release_soup():
-    """Download the blender releases page, parse it with BeautifulSoup4 and return the soup. If something wents wrong, return None."""
-    url = "https://builder.blender.org/download/release"
+
+def get_soup(url: str):
+    """Download the blender daily builds page, parse it with BeautifulSoup4 and return the soup. If something wents wrong, return None."""
     response = requests.get(url)
     if response.status_code != 200:
-        print(f"Could not get blender releases from builder.blender.org, status code: {response.status_code}")
+        print(f"⚠️ Could not GET {url}, status code: {response.status_code}")
         return None
     return BeautifulSoup(response.text, "html.parser")
 
@@ -31,24 +33,34 @@ def get_blender_prereleases(os="linux", arch="x64"):
     windows - x64
     windows - arm64
     linux - x64
-    darwin - intel
-    darwin - apple silicon
+    macos - x64
+    macos - arm64
     """
     os = os.lower()
-    if os not in ["windows", "linux", "darwin"]:
+    if os not in ["windows", "linux", "macos", "darwin"]:
         print(f"Unsupported OS: {os}")
         return None
     
     arch = arch.lower()
     if arch not in ["x64", "arm64", "apple silicon", "intel"]:
         print(f"Unsupported arch: {arch}")
-        return None 
+        return None
+    
+    search_os = os
+    search_arch = arch
+    if os == "macos":
+        search_os = "darwin"
+        if arch == "x64":
+            search_arch = "intel"
+        if arch == "arm64":
+            search_arch = "apple silicon"
 
-    soup = get_blender_release_soup()
+    url = "https://builder.blender.org/download/daily/"
+    soup = get_soup(url)
     if soup == None:
         return None
     
-    platform_tab = soup.find("div", {"class": f"platform-{os}"})
+    platform_tab = soup.find("div", {"class": f"platform-{search_os}"})
     releases = platform_tab.find_all("li")
     prereleases = []
     for release in releases:
@@ -64,11 +76,11 @@ def get_blender_prereleases(os="linux", arch="x64"):
         arch_strings = release.find("div", {"class": "b-arch"}).text.split(" ")
         architecture = arch_strings[1].lower()
         operating_system = arch_strings[0].lower()
-        if architecture != arch:
-            print(f"Architecture does not match: {architecture} {arch}, this could be a bug!")
+        if architecture != search_arch:
+            print(f"Architecture does not match: {architecture} {search_arch}, this could be a bug!")
             continue
-        if operating_system!= os:
-            print(f"Operating system does not match: {operating_system} {os}, this could be a bug!")
+        if operating_system!= search_os:
+            print(f"Operating system does not match: {operating_system} {search_os}, this could be a bug!")
             continue
 
         download = release.find("div", {"class": "b-down"})
@@ -84,6 +96,77 @@ def get_blender_prereleases(os="linux", arch="x64"):
 
     return prereleases
 
+
+def get_blender_releases(os: str="linux", arch: str="x64", min_ver=(2, 93)):
+    """Get all minor releases of Blender. If the release is higher than min_ver, then open its directory and search for highest patch release.
+    In the end, returns a list of releases, highest patch version.
+    """
+    url = "https://download.blender.org/release/"
+    soup = get_soup(url)
+    if soup == None:
+        return None
+    
+    regex = re.compile(r"Blender(\d)\.(\d+)\/")
+    links = soup.find_all("a")
+    releases = []
+    for link in links:
+        href = link.get("href")
+        if href == None:
+            continue
+        match = regex.search(href)
+        if match == None:
+            continue
+
+        ver = (int(match.group(1)), int(match.group(2)))
+        if ver < min_ver:
+            continue
+
+        release = parse_patch_releases(os, arch, urllib.parse.urljoin(url, href))
+        if release!= None:
+            releases.append(release)
+
+    return releases
+
+def parse_patch_releases(os: str, arch: str, url: str) -> Release:
+    ver_soup = get_soup(url)
+    if ver_soup == None:
+        return
+        
+    if os == "windows":
+        suffix = r"msi"
+    if os == "linux":
+        suffix = r"tar.xz"
+    if os == "macos":
+        suffix = r"dmg"
+
+    regex = re.compile(f"blender-(\\d)\\.(\\d+)\\.(\\d+)-{os}-{arch}\\.{suffix}")
+    links = ver_soup.find_all("a")
+    release = None
+    for link in links:
+        href = link.get("href")
+        if href == None:
+            continue
+
+        match = regex.search(href)
+        if match == None:
+            continue
+
+        version = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        if match == None:
+            continue
+
+        if release == None:
+            release = Release(version, "stable", "", "", arch, os, urllib.parse.urljoin(url, href))
+            continue
+
+        if version <= release.version:
+            continue
+
+        release = Release(version, "stable", "", "", arch, os, urllib.parse.urljoin(url, href))
+
+    return release 
+
+
 def parse_version(verstring: str) -> tuple[int]:
     """Parse a version string into a tuple of integers."""
     verstring = verstring.split(" ")[1]
@@ -91,7 +174,10 @@ def parse_version(verstring: str) -> tuple[int]:
     return (int(x), int(y), int(z))
 
 if __name__ == "__main__":
-    releases = get_blender_prereleases("linux", "x64")
+    releases = get_blender_releases("linux", "x64")
     for release in releases:
         print(release)
 
+    prereleases = get_blender_prereleases("linux", "x64")
+    for prerelease in prereleases:
+        print(prerelease)
