@@ -182,7 +182,7 @@ def merge_prefer_stable(releases: list[Release], dailys=list[Release]):
 
 def get_stable_and_prereleases(os: str="linux", arch: str="amd64", min_ver=(2, 93)):
     releases = get_blender_releases(os, arch, min_ver)
-    dailys = get_blender_dailys(os, arch, min_ver)
+    dailys = get_blender_dailys(os, arch)
     return merge_prefer_stable(releases, dailys)
 
 def parse_version(verstring: str) -> tuple[int]:
