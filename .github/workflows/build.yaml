@@ -175,6 +175,8 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'pip'
+      - name: Install system dependencies
+        run: apt-get update && apt-get install -y lsb-release
       - name: Install dependencies
         run: pip install -r requirements.txt
 #      - name: Install Podman
