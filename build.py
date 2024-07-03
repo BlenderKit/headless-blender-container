@@ -116,10 +116,11 @@ def build_container(url: str, version: tuple, stage: str) -> bool:
 
     #containerfile_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
     contairfile = generate_single_containerfile(version)
+    print("build dir is", build_dir)
     pb = subprocess.Popen(
         [
             'podman', 'build',
-            #'-f', containerfile_path,
+            '-f', build_dir,
             '-t', f'blenderkit/headless-blender:blender-{version[0]}.{version[1]}',
             #'--label', f'blender_version={xyz}', # --label not working on podman 3, which is defailt on ubuntu/latest
             #'--label', f'stage={stage}',
