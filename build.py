@@ -136,9 +136,9 @@ def build_container(url: str, version: tuple, stage: str) -> bool:
         stderr=subprocess.PIPE,
         )
 
-    print( 'exit status:', pp.returncode )
-    print( 'stdout:', pp.stdout.decode() )
-    print( 'stderr:', pp.stderr.decode() )
+    print( 'exit status:', pb.returncode )
+    print( 'stdout:', pb.stdout.decode() )
+    print( 'stderr:', pb.stderr.decode() )
     if pb.returncode!= 0:    
         return False
     print("-> BUILD DONE")
