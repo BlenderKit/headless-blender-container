@@ -115,26 +115,30 @@ def build_container(url: str, version: tuple, stage: str) -> bool:
     extract_tar(tar_path, build_dir)
 
     #containerfile_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
-    contairfile = generate_single_containerfile(version)
-    print("build dir is", build_dir)
-    os.chdir(build_dir)
-    pb = subprocess.Popen(
+    containerfile = generate_single_containerfile(version)
+    cfpath = os.path.join(build_dir, "Containerfile")
+    with open(cfpath, "w") as file:
+        file.write(containerfile)
+
+    print(os.listdir(build_dir))
+    pb = subprocess.run(
         [
             'podman', 'build',
+            '-f', cfpath,
             '-t', f'blenderkit/headless-blender:blender-{version[0]}.{version[1]}',
             #'--label', f'blender_version={xyz}', # --label not working on podman 3, which is defailt on ubuntu/latest
             #'--label', f'stage={stage}',
-            '-'
+            '.'
         ],
         cwd=build_dir,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         )
-    
-    stdout, stderr = pb.communicate(input=contairfile.encode('utf-8'))
-    print(f"STDOUT: '{stdout.decode()}'")
-    print(f"STDERR: '{stderr.decode()}'")
+
+    print( 'exit status:', pp.returncode )
+    print( 'stdout:', pp.stdout.decode() )
+    print( 'stderr:', pp.stderr.decode() )
     if pb.returncode!= 0:    
         return False
     print("-> BUILD DONE")
