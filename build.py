@@ -10,12 +10,29 @@ import get_blender_release as gbr
 def build_containers():
     releases = gbr.get_stable_and_prereleases(os="linux", arch="x64", min_ver=(2, 93))
     releases = gbr.order_releases(releases)
-    for release in releases:
+    prev_version = None
+    for i, release in enumerate(releases):
         ok = build_container(release.url, release.version, release.stage)
         if ok:
-            print(f"✅ {release.version} {release.stage} build OK")
+            print(f"✅ {release.version} {release.stage} single build OK")
         else:
-            print(f"❌ {release.version} {release.stage} build FAILED")
+            print(f"❌ {release.version} {release.stage} single build FAILED")
+        
+        if i == 0:
+            ok = multi_start(release.url, release.version, release.stage)
+            if ok:
+                print(f"✅ {release.version} {release.stage} multi build OK")
+            prev_version = release.version
+            continue
+
+        ok = multi_add(release.url, release.version, release.stage, prev_version)
+        if ok:
+            print(f"✅ {release.version} {release.stage} multi build OK")
+        else:
+            print(f"❌ {release.version} {release.stage} multi build FAILED")
+        
+        if i == len(releases) - 1:
+            ok = multi_push(release.version)
 
 def download_file(url, dst):
     if os.path.exists(dst):
@@ -50,11 +67,7 @@ def extract_tar(tar_path, target_dir):
     print("✅ extraction complete")
 
 
-def generate_single_containerfile(version):
-    """Generate single version Containerfile. Single version Container contais just one version of Blender."""
-    x, y, z = version
-    dockerfile = f"""
-FROM docker.io/accetto/ubuntu-vnc-xfce-opengl-g3
+SINGLE_CONTAINERFILE = """FROM docker.io/accetto/ubuntu-vnc-xfce-opengl-g3
 USER root
 
 RUN apt-get update && apt-get install -y git unzip ca-certificates
@@ -65,6 +78,20 @@ LABEL blender_version={x}.{y}.{z}
 ENTRYPOINT [ "/usr/bin/tini", "--", "/dockerstartup/startup.sh" ]
 """
 
+def generate_single_containerfile(version):
+    """Generate single version Containerfile. Single version Container contais just one version of Blender."""
+    dockerfile = SINGLE_CONTAINERFILE.format(
+        x=version[0],
+        y=version[1],
+        z=version[2]
+    )
+    return dockerfile
+
+MULTI_CONTAINERFILE = """FROM blender_3_6
+USER root
+
+ADD {x}.{y} /home/headless/blenders/{x}.{y}
+"""
 
 def copy_containerfile(build_dir):
     src = os.path.join(os.path.dirname(__file__), "single-version", "Containerfile")
@@ -121,6 +148,24 @@ def build_container(url: str, version: tuple, stage: str) -> bool:
         return False
     print("-> PUSH DONE")
     return True
+
+
+def multi_start(url: str, version: tuple, stage: str) -> bool:
+    """Build first image of multiversion Blender container.
+    Later images ADD blenders to this base image."""
+    print(f"=== Building base multi {version} ===")
+    return True
+
+def multi_add(url: str, version: tuple, stage: str, prev_version=tuple) -> bool:
+    """ADD Blender to previous multiversion image."""
+    print(f"=== Adding Blender {version} to multi {prev_version} ===")
+    return True
+
+def multi_push(version: tuple) -> bool:
+    """Push multiversion Blender container."""
+    print(f"=== Pushing multi {version} ===")
+    return True
+
 
 if __name__ == '__main__':
     build_containers()
