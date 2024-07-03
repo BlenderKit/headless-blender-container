@@ -10,7 +10,11 @@ import get_blender_release as gbr
 def build_containers():
     releases = gbr.get_stable_and_prereleases(os="linux", arch="x64", min_ver=(2, 93))
     for release in reversed(releases):
-        build_container(release.url, release.version, release.stage)
+        ok = build_container(release.url, release.version, release.stage)
+        if ok:
+            print(f"✅ {release.version} {release.stage} build OK")
+        else:
+            print(f"❌ {release.version} {release.stage} build FAILED")
 
 def download_file(url, dst):
     if os.path.exists(dst):
@@ -45,15 +49,18 @@ def extract_tar(tar_path, target_dir):
     print("✅ extraction complete")
 
 
-def generate_dockerfile(version):
-    """Generate """
-    x = version[0]
-    y = version[1]
+def generate_single_containerfile(version):
+    """Generate single version Containerfile. Single version Container contais just one version of Blender."""
+    x, y, z = version[0]
     dockerfile = f"""
 FROM docker.io/accetto/ubuntu-vnc-xfce-opengl-g3
 USER root
-RUN apt-get update && apt-get install -y git unzip ca-certificates python3-pip
-ADD {x}.{y}/blender /home/headless/blenders/{x}.{y}
+
+RUN apt-get update && apt-get install -y git unzip ca-certificates
+
+ADD blender blender
+LABEL blender_version={x}.{y}.{z}
+
 ENTRYPOINT [ "/usr/bin/tini", "--", "/dockerstartup/startup.sh" ]
 """
 
@@ -65,12 +72,13 @@ def copy_containerfile(build_dir):
     shutil.copyfile(src, dst)
 
 
-def build_container(url: str, version: tuple, stage: str):
+def build_container(url: str, version: tuple, stage: str) -> bool:
     """Build Single version Blender container."""
     if type(version) != tuple:
-        raise ValueError("Version must be a tuple (major, minor, patch)")
+        print(f"Invalid version {version}")
+        return False
+    
     print(f"=== Building {version} ===")
-
     xy = f"{version[0]}.{version[1]}"
     xyz = f"{version[0]}.{version[1]}.{version[2]}"
     build_dir = os.path.join(os.path.dirname(__file__), "build", xy)
@@ -80,25 +88,28 @@ def build_container(url: str, version: tuple, stage: str):
     download_file(url, tar_path)
     extract_tar(tar_path, build_dir)
 
-    containerfile_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
+    #containerfile_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
+    contairfile = generate_single_containerfile(version)
     pb = subprocess.run(
         [
             'podman', 'build',
-            '-f', containerfile_path,
+            #'-f', containerfile_path,
             '-t', f'blenderkit/headless-blender:blender-{xy}',
-            '--label', f'blender_version={xyz}',
-            '--label', f'stage={stage}',
-            '.'
+            #'--label', f'blender_version={xyz}', # --label not working on podman 3, which is defailt on ubuntu/latest
+            #'--label', f'stage={stage}',
+            '-'
         ],
         cwd=build_dir,
+        stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         )
-    print( 'exit status:', pb.returncode )
-    print( 'stdout:', pb.stdout.decode() )
-    print( 'stderr:', pb.stderr.decode() )
-    if pb.returncode!= 0:
-        raise RuntimeError("Build failed")
+    
+    stdout, stderr = pb.communicate(input=contairfile.encode('utf-8'))
+    print(f"STDOUT: '{stdout.decode()}'")
+    print(f"STDERR: '{stderr.decode()}'")
+    if pb.returncode!= 0:    
+        return False
     print("-> BUILD DONE")
     
     shutil.rmtree(build_dir)
@@ -108,9 +119,9 @@ def build_container(url: str, version: tuple, stage: str):
     print( 'stdout:', pp.stdout.decode() )
     print( 'stderr:', pp.stderr.decode() )
     if pp.returncode!= 0:
-        raise RuntimeError("Push failed")
+        return False
     print("-> PUSH DONE")
-    print("--- Done ---")
+    return True
 
 if __name__ == '__main__':
     build_containers()
