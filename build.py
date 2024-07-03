@@ -89,7 +89,7 @@ def build_container(url: str, version: tuple, stage: str) -> bool:
 
     #containerfile_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
     contairfile = generate_single_containerfile(version)
-    pb = subprocess.run(
+    pb = subprocess.Popen(
         [
             'podman', 'build',
             #'-f', containerfile_path,
