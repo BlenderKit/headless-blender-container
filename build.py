@@ -9,7 +9,8 @@ import get_blender_release as gbr
 
 def build_containers():
     releases = gbr.get_stable_and_prereleases(os="linux", arch="x64", min_ver=(2, 93))
-    for release in reversed(releases):
+    releases = gbr.order_releases(releases)
+    for release in releases:
         ok = build_container(release.url, release.version, release.stage)
         if ok:
             print(f"✅ {release.version} {release.stage} build OK")
@@ -51,7 +52,7 @@ def extract_tar(tar_path, target_dir):
 
 def generate_single_containerfile(version):
     """Generate single version Containerfile. Single version Container contais just one version of Blender."""
-    x, y, z = version[0]
+    x, y, z = version
     dockerfile = f"""
 FROM docker.io/accetto/ubuntu-vnc-xfce-opengl-g3
 USER root
@@ -79,8 +80,6 @@ def build_container(url: str, version: tuple, stage: str) -> bool:
         return False
     
     print(f"=== Building {version} ===")
-    xy = f"{version[0]}.{version[1]}"
-    xyz = f"{version[0]}.{version[1]}.{version[2]}"
     build_dir = os.path.join(os.path.dirname(__file__), "build", xy)
     os.makedirs(build_dir, exist_ok=True)
 
@@ -94,7 +93,7 @@ def build_container(url: str, version: tuple, stage: str) -> bool:
         [
             'podman', 'build',
             #'-f', containerfile_path,
-            '-t', f'blenderkit/headless-blender:blender-{xy}',
+            '-t', f'blenderkit/headless-blender:blender-{version[0]}.{version[1]}',
             #'--label', f'blender_version={xyz}', # --label not working on podman 3, which is defailt on ubuntu/latest
             #'--label', f'stage={stage}',
             '-'

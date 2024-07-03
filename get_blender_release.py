@@ -194,6 +194,10 @@ def parse_version(verstring: str) -> tuple[int]:
     return (int(x), int(y), int(z))
 
 
+def order_releases(releases: list[Release]) -> list[Release]:
+    """Order releases by version, lowest/oldest first to highest/newest last."""
+    return sorted(releases, key=lambda release: release.version)
+
 if __name__ == "__main__":
     print("--- releases ---")
     releases = get_blender_releases("linux", "x64")
@@ -209,3 +213,8 @@ if __name__ == "__main__":
     mixes = merge_prefer_stable(releases, prereleases)
     for mix in mixes:
         print(mix)
+
+    print("--- ordered ---")
+    ordered = order_releases(mixes)
+    for ordered in ordered:
+        print(ordered)
