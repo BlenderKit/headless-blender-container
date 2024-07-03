@@ -80,7 +80,7 @@ def build_container(url: str, version: tuple, stage: str) -> bool:
         return False
     
     print(f"=== Building {version} ===")
-    build_dir = os.path.join(os.path.dirname(__file__), "build", xy)
+    build_dir = os.path.join(os.path.dirname(__file__), "build", f"{version[0]}.{version[1]}")
     os.makedirs(build_dir, exist_ok=True)
 
     tar_path = os.path.join(build_dir, "blender.tar.xz")
@@ -113,7 +113,7 @@ def build_container(url: str, version: tuple, stage: str) -> bool:
     
     shutil.rmtree(build_dir)
 
-    pp = subprocess.run(['podman', 'push', f'blenderkit/headless-blender:blender-{xy}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    pp = subprocess.run(['podman', 'push', f'blenderkit/headless-blender:blender-{version[0]}.{version[1]}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pp.returncode )
     print( 'stdout:', pp.stdout.decode() )
     print( 'stderr:', pp.stderr.decode() )
