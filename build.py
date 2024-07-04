@@ -12,20 +12,22 @@ def build_containers():
     releases = gbr.order_releases(releases)
     prev_version = None
     for i, release in enumerate(releases):
-        ok = build_container(release.url, release.version, release.stage)
+        build_dir = os.path.join(os.path.dirname(__file__), "build", f"{release.version[0]}.{release.version[1]}")
+        ok = build_container(release.url, release.version, release.stage, build_dir)
         if ok:
             print(f"✅ {release.version} {release.stage} single build OK")
         else:
             print(f"❌ {release.version} {release.stage} single build FAILED")
         
         if i == 0:
-            ok = multi_start(release.url, release.version, release.stage)
+            ok = multi_start(release.url, release.version, release.stage, build_dir)
             if ok:
                 print(f"✅ {release.version} {release.stage} multi build OK")
             prev_version = release.version
+            shutil.rmtree(build_dir)
             continue
 
-        ok = multi_add(release.url, release.version, release.stage, prev_version)
+        ok = multi_add(release.url, release.version, prev_version, build_dir)
         if ok:
             print(f"✅ {release.version} {release.stage} multi build OK")
         else:
@@ -69,29 +71,37 @@ def extract_tar(tar_path, target_dir):
 
 SINGLE_CONTAINERFILE = """FROM docker.io/accetto/ubuntu-vnc-xfce-opengl-g3
 USER root
-
 RUN apt-get update && apt-get install -y git unzip ca-certificates
-
 ADD blender blender
-LABEL blender_version={x}.{y}.{z}
-
+LABEL blender_version={x}.{y}.{z} blender_stage={stage}
 ENTRYPOINT [ "/usr/bin/tini", "--", "/dockerstartup/startup.sh" ]
 """
 
-def generate_single_containerfile(version):
+def generate_single_containerfile(version: tuple, stage: str):
     """Generate single version Containerfile. Single version Container contais just one version of Blender."""
     dockerfile = SINGLE_CONTAINERFILE.format(
         x=version[0],
         y=version[1],
-        z=version[2]
+        z=version[2],
+        stage=stage,
     )
     return dockerfile
 
-MULTI_CONTAINERFILE = """FROM blender_3_6
+ADD_CONTAINERFILE = """FROM blender_{prev_x}_{prev_y}
 USER root
-
-ADD {x}.{y} /home/headless/blenders/{x}.{y}
+ADD blender /home/headless/blenders/{x}.{y}
 """
+
+def generate_add_containerfile(version, prev_version):
+    """Generate Containerfile which adds blender to existing image. Used to create multi version image."""
+    dockerfile = ADD_CONTAINERFILE.format(
+        x=version[0],
+        y=version[1],
+        prev_x=prev_version[0],
+        prev_y=prev_version[1]
+    )
+    return dockerfile
+
 
 def copy_containerfile(build_dir):
     src = os.path.join(os.path.dirname(__file__), "single-version", "Containerfile")
@@ -100,41 +110,33 @@ def copy_containerfile(build_dir):
     shutil.copyfile(src, dst)
 
 
-def build_container(url: str, version: tuple, stage: str) -> bool:
+def build_container(url: str, version: tuple, stage: str, build_dir: str) -> bool:
     """Build Single version Blender container."""
     if type(version) != tuple:
         print(f"Invalid version {version}")
         return False
     
     print(f"=== Building {version} ===")
-    build_dir = os.path.join(os.path.dirname(__file__), "build", f"{version[0]}.{version[1]}")
     os.makedirs(build_dir, exist_ok=True)
 
     tar_path = os.path.join(build_dir, "blender.tar.xz")
     download_file(url, tar_path)
     extract_tar(tar_path, build_dir)
 
-    #containerfile_path = os.path.join((os.path.dirname(__file__)), "single-version", "Containerfile")
-    containerfile = generate_single_containerfile(version)
+    containerfile = generate_single_containerfile(version, stage)
     cfpath = os.path.join(build_dir, "Containerfile")
     with open(cfpath, "w") as file:
         file.write(containerfile)
 
     print(os.listdir(build_dir))
-    pb = subprocess.run(
-        [
-            'podman', 'build',
-            '-f', cfpath,
-            '-t', f'blenderkit/headless-blender:blender-{version[0]}.{version[1]}',
-            #'--label', f'blender_version={xyz}', # --label not working on podman 3, which is defailt on ubuntu/latest
-            #'--label', f'stage={stage}',
-            '.'
-        ],
-        cwd=build_dir,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        )
+    cmd = [
+        'podman', 'build',
+        '-f', cfpath,
+        '-t', f'blenderkit/headless-blender:blender-{version[0]}.{version[1]}',
+        '.'
+    ]
+    print(f"- running command {' '.join(cmd)}")
+    pb = subprocess.run( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
     print( 'exit status:', pb.returncode )
     print( 'stdout:', pb.stdout.decode() )
@@ -142,8 +144,6 @@ def build_container(url: str, version: tuple, stage: str) -> bool:
     if pb.returncode!= 0:    
         return False
     print("-> BUILD DONE")
-    
-    shutil.rmtree(build_dir)
 
     pp = subprocess.run(['podman', 'push', f'blenderkit/headless-blender:blender-{version[0]}.{version[1]}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pp.returncode )
@@ -155,20 +155,82 @@ def build_container(url: str, version: tuple, stage: str) -> bool:
     return True
 
 
-def multi_start(url: str, version: tuple, stage: str) -> bool:
+def multi_start(url: str, version: tuple,  stage: str, build_dir: str) -> bool:
     """Build first image of multiversion Blender container.
     Later images ADD blenders to this base image."""
     print(f"=== Building base multi {version} ===")
+
+    os.makedirs(build_dir, exist_ok=True)
+
+    tar_path = os.path.join(build_dir, "blender.tar.xz")
+    download_file(url, tar_path)
+    extract_tar(tar_path, build_dir)
+
+    containerfile = generate_single_containerfile(version, stage)
+    cfpath = os.path.join(build_dir, "Containerfile")
+    with open(cfpath, "w") as file:
+        file.write(containerfile)
+    
+    print(os.listdir(build_dir))
+    cmd = [
+        'podman', 'build',
+        '-f', cfpath,
+        '-t', f'blenderkit/headless-blender:blender_{version[0]}_{version[1]}', #non-production tag, for multiversion only
+        '.'
+    ]
+    print(f"- running command {' '.join(cmd)}")
+    pb = subprocess.run( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    print( 'exit status:', pb.returncode )
+    print( 'stdout:', pb.stdout.decode() )
+    print( 'stderr:', pb.stderr.decode() )
+    if pb.returncode!= 0:
+        return False
+    print("-> BUILD DONE")
+
     return True
 
-def multi_add(url: str, version: tuple, stage: str, prev_version=tuple) -> bool:
+def multi_add(url: str, version: tuple, prev_version:tuple, build_dir:str) -> bool:
     """ADD Blender to previous multiversion image."""
     print(f"=== Adding Blender {version} to multi {prev_version} ===")
+
+    
+    os.makedirs(build_dir, exist_ok=True)
+
+    tar_path = os.path.join(build_dir, "blender.tar.xz")
+    download_file(url, tar_path)
+    extract_tar(tar_path, build_dir)
+
+    containerfile = generate_add_containerfile(version, prev_version)
+    cfpath = os.path.join(build_dir, "Containerfile")
+
+    with open(cfpath, "w") as file:
+        file.write(containerfile)
+
+    print(os.listdir(build_dir))
+    cmd = ['podman', 'build', '-f', cfpath, '-t', f'blenderkit/headless-blender:blender_{version[0]}_{version[1]}', '.']
+    print(f"- running command {' '.join(cmd)}")
+    pb = subprocess.run( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    print( 'exit status:', pb.returncode )
+    print( 'stdout:', pb.stdout.decode() )
+    print( 'stderr:', pb.stderr.decode() )
+    if pb.returncode!= 0:
+        return False
     return True
 
 def multi_push(version: tuple) -> bool:
     """Push multiversion Blender container."""
     print(f"=== Pushing multi {version} ===")
+    cmd = ['podman', 'push', f'blenderkit/headless-blender:blender_{version[0]}_{version[1]}']
+    print(f"- running command {' '.join(cmd)}")
+    pp = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print( 'exit status:', pp.returncode )
+    print( 'stdout:', pp.stdout.decode() )
+    print( 'stderr:', pp.stderr.decode() )
+    if pp.returncode!= 0:
+        return False
+    print("-> MULTI-VERSION PUSH DONE")
     return True
 
 
