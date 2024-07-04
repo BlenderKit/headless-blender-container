@@ -136,7 +136,7 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str) -> boo
         '.'
     ]
     print(f"- running command {' '.join(cmd)}")
-    pb = subprocess.run( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    pb = subprocess.run(cmd, cwd=build_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
     print( 'exit status:', pb.returncode )
     print( 'stdout:', pb.stdout.decode() )
@@ -179,7 +179,7 @@ def multi_start(url: str, version: tuple,  stage: str, build_dir: str) -> bool:
         '.'
     ]
     print(f"- running command {' '.join(cmd)}")
-    pb = subprocess.run( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    pb = subprocess.run(cmd, cwd=build_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
     print( 'exit status:', pb.returncode )
     print( 'stdout:', pb.stdout.decode() )
@@ -210,7 +210,7 @@ def multi_add(url: str, version: tuple, prev_version:tuple, build_dir:str) -> bo
     print(os.listdir(build_dir))
     cmd = ['podman', 'build', '-f', cfpath, '-t', f'blenderkit/headless-blender:blender_{version[0]}_{version[1]}', '.']
     print(f"- running command {' '.join(cmd)}")
-    pb = subprocess.run( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    pb = subprocess.run(cmd, cwd=build_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
     print( 'exit status:', pb.returncode )
     print( 'stdout:', pb.stdout.decode() )
