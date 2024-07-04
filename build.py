@@ -172,12 +172,7 @@ def multi_start(url: str, version: tuple,  stage: str, build_dir: str) -> bool:
         file.write(containerfile)
     
     print(os.listdir(build_dir))
-    cmd = [
-        'podman', 'build',
-        '-f', cfpath,
-        '-t', f'blenderkit/headless-blender:blender_{version[0]}_{version[1]}', #non-production tag, for multiversion only
-        '.'
-    ]
+    cmd = ['podman', 'build', '-f', cfpath, '-t', f'blender_{version[0]}_{version[1]}:latest', '.']
     print(f"- running command {' '.join(cmd)}")
     pb = subprocess.run(cmd, cwd=build_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
@@ -208,7 +203,7 @@ def multi_add(url: str, version: tuple, prev_version:tuple, build_dir:str) -> bo
         file.write(containerfile)
 
     print(os.listdir(build_dir))
-    cmd = ['podman', 'build', '-f', cfpath, '-t', f'blenderkit/headless-blender:blender_{version[0]}_{version[1]}', '.']
+    cmd = ['podman', 'build', '-f', cfpath, '-t', f'blender_{version[0]}_{version[1]}:latest', '.']
     print(f"- running command {' '.join(cmd)}")
     pb = subprocess.run(cmd, cwd=build_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
@@ -222,6 +217,13 @@ def multi_add(url: str, version: tuple, prev_version:tuple, build_dir:str) -> bo
 def multi_push(version: tuple) -> bool:
     """Push multiversion Blender container."""
     print(f"=== Pushing multi {version} ===")
+    cmd = ["podman", "image", "tag", f"blender_{version[0]}_{version[1]}", f"blenderkit/headless-blender:blender-{version[0]}.{version[1]}"]
+    print(f"- running command {' '.join(cmd)}")
+    pt = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print( 'exit status:', pt.returncode )
+    print( 'stdout:', pt.stdout.decode() )
+    print( 'stderr:', pt.stderr.decode() )
+
     cmd = ['podman', 'push', f'blenderkit/headless-blender:blender_{version[0]}_{version[1]}']
     print(f"- running command {' '.join(cmd)}")
     pp = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
