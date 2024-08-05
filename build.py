@@ -12,6 +12,8 @@ def build_containers():
     releases = gbr.order_releases(releases)
     prev_version = None
     for i, release in enumerate(releases):
+        print(f"\n\n\n ====== Blender {release.version} =====")
+
         build_dir = os.path.join(os.path.dirname(__file__), "build", f"{release.version[0]}.{release.version[1]}")
         ok = build_container(release.url, release.version, release.stage, build_dir)
         if ok:
@@ -21,13 +23,16 @@ def build_containers():
         
         if i == 0:
             ok = multi_start(release.url, release.version, release.stage, build_dir)
-            if ok:
-                print(f"✅ {release.version} {release.stage} multi build OK")
             prev_version = release.version
+            if ok:
+                print(f"✅ {release.version} {release.stage} multi build starter OK")
+            else:
+                print(f"❌ {release.version} {release.stage} multi build starter FAILED")
             shutil.rmtree(build_dir)
             continue
 
         ok = multi_add(release.url, release.version, prev_version, build_dir)
+        prev_version = release.version
         if ok:
             print(f"✅ {release.version} {release.stage} multi build OK")
         else:
@@ -111,7 +116,7 @@ def copy_containerfile(build_dir):
 
 
 def build_container(url: str, version: tuple, stage: str, build_dir: str) -> bool:
-    """Build Single version Blender container."""
+    """Build Single version Blender container and push it into the registry."""
     if type(version) != tuple:
         print(f"Invalid version {version}")
         return False
@@ -152,12 +157,16 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str) -> boo
     if pp.returncode!= 0:
         return False
     print("-> PUSH DONE")
+
+    remove_image(f"blenderkit/headless-blender:blender-{version[0]}.{version[1]}")
+
     return True
 
 
 def multi_start(url: str, version: tuple,  stage: str, build_dir: str) -> bool:
     """Build first image of multiversion Blender container.
-    Later images ADD blenders to this base image."""
+    Later images ADD blenders to this base image via function multi_add().
+    """
     print(f"=== Building base multi {version} ===")
 
     os.makedirs(build_dir, exist_ok=True)
@@ -186,10 +195,9 @@ def multi_start(url: str, version: tuple,  stage: str, build_dir: str) -> bool:
     return True
 
 def multi_add(url: str, version: tuple, prev_version:tuple, build_dir:str) -> bool:
-    """ADD Blender to previous multiversion image."""
+    """ADD Blender to already existing multiversion image."""
     print(f"=== Adding Blender {version} to multi {prev_version} ===")
 
-    
     os.makedirs(build_dir, exist_ok=True)
 
     tar_path = os.path.join(build_dir, "blender.tar.xz")
@@ -234,6 +242,19 @@ def multi_push(version: tuple) -> bool:
         return False
     print("-> MULTI-VERSION PUSH DONE")
     return True
+
+
+def remove_image(name):
+    cmd = ['podman', 'rmi', name]
+    print(f"- running command {' '.join(cmd)}")
+    p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print( 'exit status:', p.returncode )
+    print( 'stdout:', p.stdout.decode() )
+    print( 'stderr:', p.stderr.decode() )
+    if p.returncode!= 0:
+        print(f"-> FAILED to remove {name}")
+    else:
+        print(f"-> REMOVED image {name}")
 
 
 if __name__ == '__main__':
