@@ -58,7 +58,7 @@ def get_blender_dailys(os="linux", arch="x64"):
     if soup == None:
         return None
     
-    platform_tab = soup.find("div", {"class": f"platform-{search_os}"})
+    platform_tab = soup.find("div", {"class": "builds-list-container", "data-platform": {search_os}})
     releases = platform_tab.find_all("li")
     prereleases = []
     for release in releases:
