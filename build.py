@@ -12,7 +12,7 @@ def build_containers():
     releases = gbr.order_releases(releases)
     prev_version = None
     for i, release in enumerate(releases):
-        print(f"\n\n\n ====== Blender {release.version} =====")
+        print(f"\n\n\n====== Blender {release.version} ======")
 
         build_dir = os.path.join(os.path.dirname(__file__), "build", f"{release.version[0]}.{release.version[1]}")
         ok = build_container(release.url, release.version, release.stage, build_dir)
@@ -28,18 +28,26 @@ def build_containers():
                 print(f"✅ {release.version} {release.stage} multi build starter OK")
             else:
                 print(f"❌ {release.version} {release.stage} multi build starter FAILED")
-            shutil.rmtree(build_dir)
+            clean_build_dir(build_dir)
             continue
 
         ok = multi_add(release.url, release.version, prev_version, build_dir)
+        remove_image(f"blenderkit/headless-blender:blender_{prev_version[0]}_{prev_version[1]}")
         prev_version = release.version
         if ok:
             print(f"✅ {release.version} {release.stage} multi build OK")
         else:
             print(f"❌ {release.version} {release.stage} multi build FAILED")
+        clean_build_dir(build_dir)
         
         if i == len(releases) - 1:
             ok = multi_push(release.version)
+
+
+def clean_build_dir(dir: str):
+    shutil.rmtree(dir)
+    print(f"-> CLEANED directory {dir}")
+
 
 def download_file(url, dst):
     if os.path.exists(dst):
@@ -148,8 +156,9 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str) -> boo
     print( 'stderr:', pb.stderr.decode() )
     if pb.returncode!= 0:    
         return False
-    print("-> BUILD DONE")
-
+    print("-> SINGLE BUILD DONE")
+    return True
+    print("-> PUSHING SINGLE IMAGE")
     pp = subprocess.run(['podman', 'push', f'blenderkit/headless-blender:blender-{version[0]}.{version[1]}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pp.returncode )
     print( 'stdout:', pp.stdout.decode() )
@@ -224,15 +233,15 @@ def multi_add(url: str, version: tuple, prev_version:tuple, build_dir:str) -> bo
 
 def multi_push(version: tuple) -> bool:
     """Push multiversion Blender container."""
-    print(f"=== Pushing multi {version} ===")
-    cmd = ["podman", "image", "tag", f"blender_{version[0]}_{version[1]}", f"blenderkit/headless-blender:blender-{version[0]}.{version[1]}"]
+    print(f"=== Pushing multi {version} as headless-blender:multi-version ===")
+    cmd = ["podman", "image", "tag", f"blender_{version[0]}_{version[1]}", f"blenderkit/headless-blender:multi-version"]
     print(f"- running command {' '.join(cmd)}")
     pt = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pt.returncode )
     print( 'stdout:', pt.stdout.decode() )
     print( 'stderr:', pt.stderr.decode() )
 
-    cmd = ['podman', 'push', f'blenderkit/headless-blender:blender_{version[0]}_{version[1]}']
+    cmd = ['podman', 'push', f'blenderkit/headless-blender:multi-version']
     print(f"- running command {' '.join(cmd)}")
     pp = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pp.returncode )
