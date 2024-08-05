@@ -32,7 +32,7 @@ def build_containers():
             continue
 
         ok = multi_add(release.url, release.version, prev_version, build_dir)
-        remove_image(f"blenderkit/headless-blender:blender_{prev_version[0]}_{prev_version[1]}")
+        remove_image(f"blender_{prev_version[0]}_{prev_version[1]}")
         prev_version = release.version
         if ok:
             print(f"✅ {release.version} {release.stage} multi build OK")
