@@ -157,7 +157,7 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str) -> boo
     if pb.returncode!= 0:    
         return False
     print("-> SINGLE BUILD DONE")
-    return True
+
     print("-> PUSHING SINGLE IMAGE")
     pp = subprocess.run(['podman', 'push', f'blenderkit/headless-blender:blender-{version[0]}.{version[1]}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pp.returncode )
