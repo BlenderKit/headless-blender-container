@@ -1,4 +1,0 @@
-FROM blender_4_1
-USER root
-
-ADD 4.2 /home/headless/blenders/4.2

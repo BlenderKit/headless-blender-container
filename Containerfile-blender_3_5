@@ -1,4 +1,0 @@
-FROM blender_3_4
-USER root
-
-ADD 3.5 /home/headless/blenders/3.5

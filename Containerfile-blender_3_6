@@ -1,4 +1,0 @@
-FROM blender_3_5
-USER root
-
-ADD 3.6 /home/headless/blenders/3.6

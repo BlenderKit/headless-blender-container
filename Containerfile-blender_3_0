@@ -1,4 +1,0 @@
-FROM blender_2_93
-USER root
-
-ADD 3.0 /home/headless/blenders/3.0
