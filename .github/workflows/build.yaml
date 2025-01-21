@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  Blender-releases:
+  Blender-releases-Dockerhub:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,13 +25,31 @@ jobs:
           PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
         run: podman login docker.io -u agajdosi -p $PASSWORD
       - name: Build.py
+        env:
+          DOCKER_REGISTRY: docker.io
         run: python3 build.py
 
+  Blender-releases-GHCR:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Install Podman
+        run: sudo apt-get -y update && sudo apt-get -y install podman
       - name: Login to GHCR.io
         uses: redhat-actions/podman-login@v1
         with:
           registry: ghcr.io
           username: ${{github.actor}}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push the container image to GHCR.io
-        run: podman push ghcr.io/blenderkit/headless-blender:multi-version
+      - name: Build.py
+        env:
+          DOCKER_REGISTRY: ghcr.io
+        run: python3 build.py
+
+

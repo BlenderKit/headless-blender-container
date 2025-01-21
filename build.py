@@ -7,7 +7,7 @@ import shutil
 import get_blender_release as gbr
 
 
-def build_containers():
+def build_containers(registry: str):
     releases = gbr.get_stable_and_prereleases(os="linux", arch="x64", min_ver=(2, 93))
     releases = gbr.order_releases(releases)
     prev_version = None
@@ -15,7 +15,7 @@ def build_containers():
         print(f"\n\n\n====== Blender {release.version} ======")
 
         build_dir = os.path.join(os.path.dirname(__file__), "build", f"{release.version[0]}.{release.version[1]}")
-        ok = build_container(release.url, release.version, release.stage, build_dir)
+        ok = build_container(release.url, release.version, release.stage, build_dir, registry)
         if ok:
             print(f"✅ {release.version} {release.stage} single build OK")
         else:
@@ -41,7 +41,7 @@ def build_containers():
         clean_build_dir(build_dir)
         
         if i == len(releases) - 1:
-            ok = multi_push(release.version)
+            ok = multi_push(release.version, registry)
 
 
 def clean_build_dir(dir: str):
@@ -123,7 +123,7 @@ def copy_containerfile(build_dir):
     shutil.copyfile(src, dst)
 
 
-def build_container(url: str, version: tuple, stage: str, build_dir: str) -> bool:
+def build_container(url: str, version: tuple, stage: str, build_dir: str, registry: str) -> bool:
     """Build Single version Blender container and push it into the registry."""
     if type(version) != tuple:
         print(f"Invalid version {version}")
@@ -145,7 +145,7 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str) -> boo
     cmd = [
         'podman', 'build',
         '-f', cfpath,
-        '-t', f'blenderkit/headless-blender:blender-{version[0]}.{version[1]}',
+        '-t', f'{registry}/blenderkit/headless-blender:blender-{version[0]}.{version[1]}',
         '.'
     ]
     print(f"- running command {' '.join(cmd)}")
@@ -159,7 +159,7 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str) -> boo
     print("-> SINGLE BUILD DONE")
 
     print("-> PUSHING SINGLE IMAGE")
-    pp = subprocess.run(['podman', 'push', f'blenderkit/headless-blender:blender-{version[0]}.{version[1]}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    pp = subprocess.run(['podman', 'push', f'{registry}/blenderkit/headless-blender:blender-{version[0]}.{version[1]}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pp.returncode )
     print( 'stdout:', pp.stdout.decode() )
     print( 'stderr:', pp.stderr.decode() )
@@ -167,7 +167,7 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str) -> boo
         return False
     print("-> PUSH DONE")
 
-    remove_image(f"blenderkit/headless-blender:blender-{version[0]}.{version[1]}")
+    remove_image(f"{registry}/blenderkit/headless-blender:blender-{version[0]}.{version[1]}")
 
     return True
 
@@ -231,17 +231,17 @@ def multi_add(url: str, version: tuple, prev_version:tuple, build_dir:str) -> bo
         return False
     return True
 
-def multi_push(version: tuple) -> bool:
+def multi_push(version: tuple, registry: str) -> bool:
     """Push multiversion Blender container."""
     print(f"=== Pushing multi {version} as headless-blender:multi-version ===")
-    cmd = ["podman", "image", "tag", f"blender_{version[0]}_{version[1]}", f"blenderkit/headless-blender:multi-version"]
+    cmd = ["podman", "image", "tag", f"blender_{version[0]}_{version[1]}", f"{registry}/blenderkit/headless-blender:multi-version"]
     print(f"- running command {' '.join(cmd)}")
     pt = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pt.returncode )
     print( 'stdout:', pt.stdout.decode() )
     print( 'stderr:', pt.stderr.decode() )
 
-    cmd = ['podman', 'push', f'blenderkit/headless-blender:multi-version']
+    cmd = ['podman', 'push', f'{registry}/blenderkit/headless-blender:multi-version']
     print(f"- running command {' '.join(cmd)}")
     pp = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print( 'exit status:', pp.returncode )
@@ -267,4 +267,5 @@ def remove_image(name):
 
 
 if __name__ == '__main__':
-    build_containers()
+    registry = os.environ.get("DOCKER_REGISTRY", "docker.io")
+    build_containers(registry)
