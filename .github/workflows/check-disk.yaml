@@ -1,0 +1,39 @@
+name: check-disk
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  disk-usage:
+    name: Verify runner disk space
+    runs-on: ubuntu-latest
+    env:
+      MIN_FREE_GB: '35'
+    steps:
+      - name: Gather filesystem statistics
+        run: |
+          echo "Filesystem usage snapshot"
+          df -h /
+          echo
+          echo "Top-level workspace usage"
+          sudo du -sh /home/runner /
+      - name: Enforce minimum free space
+        shell: bash
+        run: |
+          set -euo pipefail
+          avail=$(df --output=avail -BG / | tail -n 1 | tr -dc '0-9')
+          echo "Available space on /: ${avail}G"
+          if (( avail < MIN_FREE_GB )); then
+            echo "::error::Free space ${avail}G is below threshold ${MIN_FREE_GB}G"
+            exit 1
+          fi
+          echo "Free space is healthy"
+      - name: Report container storage usage
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y podman > /dev/null
+          podman system df || true
