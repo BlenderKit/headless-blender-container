@@ -1,3 +1,9 @@
 {
-    "iis.configDir": ""
+    "iis.configDir": "",
+    "cSpell.words": [
+        "blenderkit",
+        "Containerfile",
+        "multiversion",
+        "winerror"
+    ]
 }

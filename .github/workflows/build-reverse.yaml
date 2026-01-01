@@ -1,18 +1,15 @@
-name: build
+name: build-reverse
 
 on:
-  push:
-      branches: [ main ]
-  schedule:
-    - cron: '30 4 * * *'
   workflow_dispatch:
 
 jobs:
-  Blender-releases-Dockerhub:
+  Blender-releases-Dockerhub-Reverse:
     runs-on: ubuntu-latest
     env:
       MIN_FREE_GB: '15'
       DISABLE_PODMAN_PRUNE: '0'
+      REVERSE_BUILD_ORDER: '1'
     steps:
       - uses: actions/checkout@v4
       - name: Snapshot workspace storage
@@ -46,11 +43,12 @@ jobs:
           DOCKER_REGISTRY: docker.io
         run: python3 build.py
 
-  Blender-releases-GHCR:
+  Blender-releases-GHCR-Reverse:
     runs-on: ubuntu-latest
     env:
       MIN_FREE_GB: '15'
       DISABLE_PODMAN_PRUNE: '0'
+      REVERSE_BUILD_ORDER: '1'
     steps:
       - uses: actions/checkout@v4
       - name: Snapshot workspace storage
@@ -79,11 +77,9 @@ jobs:
         uses: redhat-actions/podman-login@v1
         with:
           registry: ghcr.io
-          username: ${{github.actor}}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build.py
         env:
           DOCKER_REGISTRY: ghcr.io
         run: python3 build.py
-
-
