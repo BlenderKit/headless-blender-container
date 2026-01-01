@@ -56,7 +56,10 @@ def build_containers(registry: str):
                 print(f"❌ {release.version} {release.stage} multi build starter FAILED")
             clean_build_dir(build_dir)
             log_disk_usage(f"after cleanup {release.version}")
-            prune_podman_storage(f"post {release.version}")
+            if ok:
+                print("-> Skipping prune to keep base multi image for next layer")
+            else:
+                prune_podman_storage(f"post {release.version}")
             continue
 
         ok = multi_add(release.url, release.version, prev_version, build_dir)
@@ -68,11 +71,15 @@ def build_containers(registry: str):
             print(f"❌ {release.version} {release.stage} multi build FAILED")
         clean_build_dir(build_dir)
         log_disk_usage(f"after cleanup {release.version}")
-        prune_podman_storage(f"post {release.version}")
+        if ok:
+            prune_podman_storage(f"post {release.version}")
+        else:
+            print("-> Skipping prune to keep previous multi image intact")
 
         if i == len(releases) - 1:
             ok = multi_push(release.version, registry)
-            prune_podman_storage("post multi push")
+            if ok:
+                prune_podman_storage("post multi push")
 
 
 def clean_build_dir(dir: str):
