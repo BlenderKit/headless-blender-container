@@ -26,7 +26,10 @@ def build_containers(registry: str):
     if start_version:
         try:
             start_tuple = tuple(int(part) for part in start_version.split('.'))
-            releases = [r for r in releases if r.version <= start_tuple]
+            if REVERSE_BUILD_ORDER:
+                releases = [r for r in releases if r.version <= start_tuple]
+            else:
+                releases = [r for r in releases if r.version >= start_tuple]
             print(f"-> START_VERSION={start_version}, remaining releases: {len(releases)}")
         except ValueError:
             print(f"-> WARNING: invalid START_VERSION '{start_version}', ignoring filter")
@@ -57,10 +60,10 @@ def build_containers(registry: str):
             continue
 
         ok = multi_add(release.url, release.version, prev_version, build_dir)
-        remove_image(f"blender_{prev_version[0]}_{prev_version[1]}")
-        prev_version = release.version
         if ok:
             print(f"✅ {release.version} {release.stage} multi build OK")
+            remove_image(f"blender_{prev_version[0]}_{prev_version[1]}")
+            prev_version = release.version
         else:
             print(f"❌ {release.version} {release.stage} multi build FAILED")
         clean_build_dir(build_dir)
