@@ -30,6 +30,7 @@ You can clone this repo and run it on its own. By default the pipeline iterates 
 	- The script mirrors the CI steps: checks free disk space, installs Python dependencies, prints `docker info`, and calls `python build.py`.
 	- Pushing images is disabled by default (`SKIP_IMAGE_PUSH=1`). Pass `-PushImages` to enable it.
 	- Set `-Runtime podman` if you have Podman installed instead of Docker.
+	- Pass `-ReverseOrder` to build newest releases first (sets `REVERSE_BUILD_ORDER=1`).
 	- You can skip dependency installation with `-SkipDependencyInstall` when re-running quickly.
 
 ### Single version

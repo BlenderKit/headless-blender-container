@@ -3,6 +3,7 @@ param(
     [string]$Registry = "docker.io",
     [string]$Runtime = "docker",
     [string]$StartVersion,
+    [switch]$ReverseOrder,
     [switch]$SkipDependencyInstall,
     [switch]$PushImages
 )
@@ -50,6 +51,14 @@ function Write-Step {
     if ($StartVersion) {
         $env:START_VERSION = $StartVersion
         Write-Step "Starting build at version $StartVersion"
+    }
+    if ($ReverseOrder) {
+        $env:REVERSE_BUILD_ORDER = "1"
+        Write-Step "Building newest to oldest (-ReverseOrder)"
+    } else {
+        if (Test-Path Env:REVERSE_BUILD_ORDER) {
+            Remove-Item Env:REVERSE_BUILD_ORDER
+        }
     }
 
     Write-Step "Disk snapshot"
