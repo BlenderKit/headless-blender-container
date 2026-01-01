@@ -397,7 +397,8 @@ def prune_podman_storage(reason: str):
         return
 
     print(f"-> Pruning podman storage ({reason})")
-    cmd = runtime_cmd('system', 'prune', '-a', '--volumes', '--force')
+    # Use prune without -a so tagged multi images stay available for the next layer
+    cmd = runtime_cmd('system', 'prune', '--volumes', '--force')
     p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print('exit status:', p.returncode)
     print('stdout:', p.stdout.decode())
