@@ -16,25 +16,8 @@ def runtime_cmd(*args):
 
 def build_containers(registry: str):
     releases = gbr.get_stable_and_prereleases(os="linux", arch="x64", min_ver=(2, 93))
-    releases = list(gbr.order_releases(releases))
-    if REVERSE_BUILD_ORDER:
-        releases = list(reversed(releases))
-        print("-> REVERSE_BUILD_ORDER=1, building newest to oldest")
-    else:
-        print("-> Building oldest to newest (default)")
-    start_version = os.environ.get("START_VERSION")
-    if start_version:
-        try:
-            start_tuple = tuple(int(part) for part in start_version.split('.'))
-            if REVERSE_BUILD_ORDER:
-                releases = [r for r in releases if r.version <= start_tuple]
-            else:
-                releases = [r for r in releases if r.version >= start_tuple]
-            print(f"-> START_VERSION={start_version}, remaining releases: {len(releases)}")
-        except ValueError:
-            print(f"-> WARNING: invalid START_VERSION '{start_version}', ignoring filter")
-    prev_version = None
-    for i, release in enumerate(releases):
+    releases = gbr.order_releases(releases)
+    for release in releases:
         print(f"\n\n\n====== Blender {release.version} ======")
 
         log_disk_usage(f"before {release.version}")
@@ -42,44 +25,12 @@ def build_containers(registry: str):
 
         build_dir = os.path.join(os.path.dirname(__file__), "build", f"{release.version[0]}.{release.version[1]}")
         ok = build_container(release.url, release.version, release.stage, build_dir, registry)
+        clean_build_dir(build_dir)
+        
         if ok:
             print(f"✅ {release.version} {release.stage} single build OK")
         else:
             print(f"❌ {release.version} {release.stage} single build FAILED")
-
-        if i == 0:
-            ok = multi_start(release.url, release.version, release.stage, build_dir)
-            prev_version = release.version
-            if ok:
-                print(f"✅ {release.version} {release.stage} multi build starter OK")
-            else:
-                print(f"❌ {release.version} {release.stage} multi build starter FAILED")
-            clean_build_dir(build_dir)
-            log_disk_usage(f"after cleanup {release.version}")
-            if ok:
-                print("-> Skipping prune to keep base multi image for next layer")
-            else:
-                prune_podman_storage(f"post {release.version}")
-            continue
-
-        ok = multi_add(release.url, release.version, prev_version, build_dir)
-        if ok:
-            print(f"✅ {release.version} {release.stage} multi build OK")
-            remove_image(f"blender_{prev_version[0]}_{prev_version[1]}")
-            prev_version = release.version
-        else:
-            print(f"❌ {release.version} {release.stage} multi build FAILED")
-        clean_build_dir(build_dir)
-        log_disk_usage(f"after cleanup {release.version}")
-        if ok:
-            prune_podman_storage(f"post {release.version}")
-        else:
-            print("-> Skipping prune to keep previous multi image intact")
-
-        if i == len(releases) - 1:
-            ok = multi_push(release.version, registry)
-            if ok:
-                prune_podman_storage("post multi push")
 
 
 def clean_build_dir(dir: str):
@@ -204,28 +155,6 @@ def generate_single_containerfile(version: tuple, stage: str):
     )
     return dockerfile
 
-ADD_CONTAINERFILE = """FROM blender_{prev_x}_{prev_y}
-USER root
-ADD blender /home/headless/blenders/{x}.{y}
-"""
-
-def generate_add_containerfile(version, prev_version):
-    """Generate Containerfile which adds blender to existing image. Used to create multi version image."""
-    dockerfile = ADD_CONTAINERFILE.format(
-        x=version[0],
-        y=version[1],
-        prev_x=prev_version[0],
-        prev_y=prev_version[1]
-    )
-    return dockerfile
-
-
-def copy_containerfile(build_dir):
-    src = os.path.join(os.path.dirname(__file__), "single-version", "Containerfile")
-    dst = os.path.join(build_dir, "Containerfile")
-    print(f"- copying {src} -> {dst}")
-    shutil.copyfile(src, dst)
-
 
 def build_container(url: str, version: tuple, stage: str, build_dir: str, registry: str) -> bool:
     """Build Single version Blender container and push it into the registry."""
@@ -291,90 +220,6 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str, regist
 
     remove_image(f"{registry}/blenderkit/headless-blender:blender-{version[0]}.{version[1]}")
 
-    return True
-
-
-def multi_start(url: str, version: tuple,  stage: str, build_dir: str) -> bool:
-    """Build first image of multiversion Blender container.
-    Later images ADD blenders to this base image via function multi_add().
-    """
-    print(f"=== Building base multi {version} ===")
-
-    os.makedirs(build_dir, exist_ok=True)
-
-    tar_path = os.path.join(build_dir, "blender.tar.xz")
-    download_file(url, tar_path)
-    extract_tar(tar_path, build_dir)
-
-    containerfile = generate_single_containerfile(version, stage)
-    cfpath = os.path.join(build_dir, "Containerfile")
-    with open(cfpath, "w") as file:
-        file.write(containerfile)
-
-    print(os.listdir(build_dir))
-    cmd = runtime_cmd('build', '-f', cfpath, '-t', f'blender_{version[0]}_{version[1]}:latest', '.')
-    print(f"- running command {' '.join(cmd)}")
-    pb = subprocess.run(cmd, cwd=build_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    print( 'exit status:', pb.returncode )
-    print( 'stdout:', pb.stdout.decode() )
-    print( 'stderr:', pb.stderr.decode() )
-    if pb.returncode!= 0:
-        return False
-    print("-> BUILD DONE")
-
-    return True
-
-def multi_add(url: str, version: tuple, prev_version:tuple, build_dir:str) -> bool:
-    """ADD Blender to already existing multiversion image."""
-    print(f"=== Adding Blender {version} to multi {prev_version} ===")
-
-    os.makedirs(build_dir, exist_ok=True)
-
-    tar_path = os.path.join(build_dir, "blender.tar.xz")
-    download_file(url, tar_path)
-    extract_tar(tar_path, build_dir)
-
-    containerfile = generate_add_containerfile(version, prev_version)
-    cfpath = os.path.join(build_dir, "Containerfile")
-
-    with open(cfpath, "w") as file:
-        file.write(containerfile)
-
-    print(os.listdir(build_dir))
-    cmd = runtime_cmd('build', '-f', cfpath, '-t', f'blender_{version[0]}_{version[1]}:latest', '.')
-    print(f"- running command {' '.join(cmd)}")
-    pb = subprocess.run(cmd, cwd=build_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    print( 'exit status:', pb.returncode )
-    print( 'stdout:', pb.stdout.decode() )
-    print( 'stderr:', pb.stderr.decode() )
-    if pb.returncode!= 0:
-        return False
-    return True
-
-def multi_push(version: tuple, registry: str) -> bool:
-    """Push multiversion Blender container."""
-    print(f"=== Pushing multi {version} as headless-blender:multi-version ===")
-    if SKIP_IMAGE_PUSH:
-        print("-> SKIPPING MULTI PUSH (SKIP_IMAGE_PUSH=1)")
-        return True
-    cmd = runtime_cmd("image", "tag", f"blender_{version[0]}_{version[1]}", f"{registry}/blenderkit/headless-blender:multi-version")
-    print(f"- running command {' '.join(cmd)}")
-    pt = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print( 'exit status:', pt.returncode )
-    print( 'stdout:', pt.stdout.decode() )
-    print( 'stderr:', pt.stderr.decode() )
-
-    cmd = runtime_cmd('push', f'{registry}/blenderkit/headless-blender:multi-version')
-    print(f"- running command {' '.join(cmd)}")
-    pp = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print( 'exit status:', pp.returncode )
-    print( 'stdout:', pp.stdout.decode() )
-    print( 'stderr:', pp.stderr.decode() )
-    if pp.returncode!= 0:
-        return False
-    print("-> MULTI-VERSION PUSH DONE")
     return True
 
 
