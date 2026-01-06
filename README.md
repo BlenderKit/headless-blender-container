@@ -1,14 +1,15 @@
 # Blender Headless Container
 
-Repository for builds of blender-headless (Docker) containers.
+A repository providing Docker containers for headless Blender builds.
+
+Single-version containers are available for every minor release of Blender since 2.93, including both official releases and pre-release versions (alpha, beta, and release candidates) of upcoming Blender versions.
+
 These can be used for rendering or other manipulation of Blender files as well as testing.
-Containers are available at: https://hub.docker.com/r/blenderkit/headless-blender.
+Containers are available at on Docker https://hub.docker.com/r/blenderkit/headless-blender and also in Github Container Registry https://github.com/BlenderKit/headless-blender-container/pkgs/container/headless-blender. 
 
-We provide single version container for every release minor Blender version since 2.93.
-Multi-version is also provided, this container contains all Blender versions from 2.93 to the most recent.
-
-Now you know all you need.
-Details follows if you are interested in development of the images.
+NOTE: multi-version variant of the container which contained all the Blender versions in one image was also provided.
+Due to size constraints of Github Actions and Docker Hub and low usage of this image, this variant is no longer built or provided.
+Please use single version images instead, or feel free to fork at https://github.com/BlenderKit/blenderkit_asset_tasks/tree/a2f0f13225b01e90ada5a39e9346b7f03aa83f30 and build your own multi-version image if you need it.
 
 ## How it is done
 
@@ -34,12 +35,7 @@ You can clone this repo and run it on its own. By default the pipeline iterates 
 	- You can skip dependency installation with `-SkipDependencyInstall` when re-running quickly.
 
 ### Single version
-Containerfile for single version is available in `single-version` folder.
-It requires the targeted version of Blender to be extracted in `blender` directory.
-Container file pulls image docker.io/accetto/ubuntu-vnc-xfce-opengl-g3 annd just copies `blender` directory into the container.
+Containerfile for single version is available in `single-version` folder, however the latest and actually used version is in build.py in SINGLE_CONTAINERFILE variable.
 
-### Multi version
-Multiversion build is chained.
-It starts with `Containerfile-blender_2_93` which pulls docker.io/accetto/ubuntu-vnc-xfce-opengl-g3.
-`Containerfile-blender_2_93` is then pulled by `Containerfile-blender_3_0`, which is then pulled by `Containerfile-blender_3_1` until we reach latest version.
-Result is container image which contains multiple Blender versions.
+Containerfile requires the targeted version of Blender to be extracted in `blender` directory.
+Container file pulls image docker.io/accetto/ubuntu-vnc-xfce-opengl-g3 annd just copies `blender` directory into the container.
