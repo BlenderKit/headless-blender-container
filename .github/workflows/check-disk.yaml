@@ -18,7 +18,10 @@ jobs:
           df -h /
           echo
           echo "Top-level workspace usage"
-          sudo du -sh /home/runner /
+          sudo du -sh /home/runner
+          sudo du -sh --one-file-system \
+            --exclude=/proc --exclude=/sys --exclude=/dev --exclude=/run \
+            / 2>/dev/null || true
       - name: Enforce minimum free space
         shell: bash
         run: |
