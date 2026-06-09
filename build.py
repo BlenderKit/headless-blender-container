@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import requests
 import tarfile
@@ -156,6 +157,19 @@ def generate_single_containerfile(version: tuple, stage: str):
     return dockerfile
 
 
+def stage_tag_suffix(stage: str) -> str:
+    """Normalize a build stage into a tag-safe suffix.
+
+    Examples: 'stable' -> 'stable', 'alpha' -> 'alpha', 'release candidate' -> 'rc'.
+    Always returns a non-empty, registry-safe token ([a-z0-9-]).
+    """
+    s = (stage or "").strip().lower()
+    if "candidate" in s:
+        return "rc"
+    safe = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+    return safe or "unknown"
+
+
 def build_container(url: str, version: tuple, stage: str, build_dir: str, registry: str) -> bool:
     """Build Single version Blender container and push it into the registry."""
     if type(version) != tuple:
@@ -185,10 +199,16 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str, regist
         file.write(containerfile)
 
     print(os.listdir(build_dir))
+    base_tag = f'{registry}/blenderkit/headless-blender:blender-{version[0]}.{version[1]}'
+    # Extra, stage-qualified tag (e.g. blender-5.2-stable / -alpha / -rc) pointing
+    # at the same image. Purely additive: the base tag above is unchanged, so
+    # existing consumers that pull blender-X.Y keep working exactly as before.
+    stage_tag = f'{base_tag}-{stage_tag_suffix(stage)}'
     cmd = runtime_cmd(
         'build',
         '-f', cfpath,
-        '-t', f'{registry}/blenderkit/headless-blender:blender-{version[0]}.{version[1]}',
+        '-t', base_tag,
+        '-t', stage_tag,
         '.'
     )
     print(f"- running command {' '.join(cmd)}")
@@ -205,7 +225,7 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str, regist
         print("-> SKIPPING PUSH (SKIP_IMAGE_PUSH=1)")
     else:
         print("-> PUSHING SINGLE IMAGE")
-        push_cmd = runtime_cmd('push', f'{registry}/blenderkit/headless-blender:blender-{version[0]}.{version[1]}')
+        push_cmd = runtime_cmd('push', base_tag)
         pp = subprocess.run(
             push_cmd,
             stdout=subprocess.PIPE,
@@ -218,7 +238,24 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str, regist
             return False
         print("-> PUSH DONE")
 
-    remove_image(f"{registry}/blenderkit/headless-blender:blender-{version[0]}.{version[1]}")
+        # Best-effort: a failure to push the extra stage tag must never fail a
+        # build that already pushed the base tag successfully.
+        print(f"-> PUSHING STAGE-TAGGED IMAGE {stage_tag}")
+        ps = subprocess.run(
+            runtime_cmd('push', stage_tag),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        print( 'exit status:', ps.returncode )
+        print( 'stdout:', ps.stdout.decode() )
+        print( 'stderr:', ps.stderr.decode() )
+        if ps.returncode!= 0:
+            print(f"-> WARNING: failed to push stage tag {stage_tag} (non-fatal)")
+        else:
+            print("-> STAGE PUSH DONE")
+
+    remove_image(base_tag)
+    remove_image(stage_tag)
 
     return True
 
