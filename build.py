@@ -14,8 +14,10 @@ REVERSE_BUILD_ORDER = os.environ.get("REVERSE_BUILD_ORDER") == "1"
 KEEP_IMAGES = os.environ.get("KEEP_IMAGES") == "1"
 KEEP_BUILD_DIRS = os.environ.get("KEEP_BUILD_DIRS") == "1"
 
+
 def runtime_cmd(*args):
         return [CONTAINER_RUNTIME, *args]
+
 
 def build_containers(registry: str):
     releases = gbr.get_stable_and_prereleases(os="linux", arch="x64", min_ver=(2, 93))
@@ -206,6 +208,7 @@ LABEL blender_version={x}.{y}.{z} blender_stage={stage}
 ENTRYPOINT [ "/usr/bin/tini", "--", "/dockerstartup/startup.sh" ]
 """
 
+
 def generate_single_containerfile(version: tuple, stage: str):
     """Generate single version Containerfile. Single version Container contains just one version of Blender."""
     dockerfile = SINGLE_CONTAINERFILE.format(
@@ -223,6 +226,7 @@ RUN apt-get update && apt-get install -y git unzip ca-certificates
 ADD blender /home/headless/blenders/{x}.{y}
 ENTRYPOINT [ "/usr/bin/tini", "--", "/dockerstartup/startup.sh" ]
 """
+
 
 MULTI_ADD_CONTAINERFILE = """FROM blender_{prev_x}_{prev_y}
 USER root
