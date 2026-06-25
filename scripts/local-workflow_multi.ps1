@@ -4,7 +4,6 @@ param(
     [string]$Runtime = "docker",
     [string]$StartVersion,
     [switch]$ReverseOrder,
-    [switch]$Multi,
     [switch]$RemoveImages,
     [switch]$SkipDependencyInstall,
     [switch]$PushImages
@@ -63,14 +62,9 @@ function Write-Step {
         }
     }
 
-    if ($Multi) {
-        $env:BUILD_MULTI = "1"
-        Write-Step "Building single multi-version image (stable releases only, latest patch per minor)"
-    } else {
-        if (Test-Path Env:BUILD_MULTI) {
-            Remove-Item Env:BUILD_MULTI
-        }
-    }
+    $env:BUILD_MULTI = "1"
+    Write-Step "Building single multi-version image (stable releases only, latest patch per minor)"
+
 
     if ($RemoveImages) {
         if (Test-Path Env:KEEP_IMAGES) {
