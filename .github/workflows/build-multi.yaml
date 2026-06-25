@@ -1,0 +1,89 @@
+name: build-multi
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  Blender-multi-Dockerhub:
+    runs-on: ubuntu-latest
+    env:
+      MIN_FREE_GB: '35'
+      DISABLE_PODMAN_PRUNE: '0'
+      BUILD_MULTI: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Snapshot workspace storage
+        run: |
+          df -h /
+          du -sh "$GITHUB_WORKSPACE" || true
+          du -sh "$RUNNER_TEMP" || true
+      - name: Verify minimum free space
+        run: |
+          python - <<'PY'
+          import shutil, sys, os
+          free = shutil.disk_usage('/')[-1] / (1024 ** 3)
+          need = float(os.environ.get('MIN_FREE_GB', '35'))
+          print(f"Free space on /: {free:.1f} GiB (need {need:.1f} GiB)")
+          sys.exit(0 if free >= need else 1)
+          PY
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Install Podman
+        run: sudo apt-get -y update && sudo apt-get -y install podman
+      - name: Login to Dockerhub
+        env:
+          PASSWORD: ${{ secrets.AGAJDOSI_DOCKERHUB_SECRET }}
+        run: podman login docker.io -u agajdosi -p $PASSWORD
+      - name: Build multi-version image
+        env:
+          DOCKER_REGISTRY: docker.io
+        run: python3 build.py
+
+  Blender-multi-GHCR:
+    runs-on: ubuntu-latest
+    env:
+      MIN_FREE_GB: '35'
+      DISABLE_PODMAN_PRUNE: '0'
+      BUILD_MULTI: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Snapshot workspace storage
+        run: |
+          df -h /
+          du -sh "$GITHUB_WORKSPACE" || true
+          du -sh "$RUNNER_TEMP" || true
+      - name: Verify minimum free space
+        run: |
+          python - <<'PY'
+          import shutil, sys, os
+          free = shutil.disk_usage('/')[-1] / (1024 ** 3)
+          need = float(os.environ.get('MIN_FREE_GB', '35'))
+          print(f"Free space on /: {free:.1f} GiB (need {need:.1f} GiB)")
+          sys.exit(0 if free >= need else 1)
+          PY
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Install Podman
+        run: sudo apt-get -y update && sudo apt-get -y install podman
+      - name: Login to GHCR.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build multi-version image
+        env:
+          DOCKER_REGISTRY: ghcr.io
+        run: python3 build.py
