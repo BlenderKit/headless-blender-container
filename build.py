@@ -308,10 +308,16 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str, regist
         file.write(containerfile)
 
     print(os.listdir(build_dir))
+    base_tag = f'{registry}/blenderkit/headless-blender:blender-{version[0]}.{version[1]}'
+    # Extra, stage-qualified tag (e.g. blender-5.2-stable / -alpha / -rc) pointing
+    # at the same image. Purely additive: the base tag above is unchanged, so
+    # existing consumers that pull blender-X.Y keep working exactly as before.
+    stage_tag = f'{base_tag}-{stage_tag_suffix(stage)}'
     cmd = runtime_cmd(
         'build',
         '-f', cfpath,
-        '-t', f'{registry}/blenderkit/headless-blender:blender-{version[0]}.{version[1]}',
+        '-t', base_tag,
+        '-t', stage_tag,
         '.'
     )
     print(f"- running command {' '.join(cmd)}")
@@ -328,7 +334,7 @@ def build_container(url: str, version: tuple, stage: str, build_dir: str, regist
         print("-> SKIPPING PUSH (SKIP_IMAGE_PUSH=1)")
     else:
         print("-> PUSHING SINGLE IMAGE")
-        push_cmd = runtime_cmd('push', f'{registry}/blenderkit/headless-blender:blender-{version[0]}.{version[1]}')
+        push_cmd = runtime_cmd('push', base_tag)
         pp = subprocess.run(
             push_cmd,
             stdout=subprocess.PIPE,
